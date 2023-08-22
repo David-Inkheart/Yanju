@@ -2,12 +2,24 @@ import jwt from 'jsonwebtoken';
 import { hashPassword, comparePasswords } from '../utils/passwordService';
 import { registerSchema, loginSchema } from '../utils/validators';
 import { createUser, findUser } from '../repositories/db.user';
-import { sendToQueue } from '../utils/rabbitMQ/producer';
+import { createAccount } from '../repositories/db.account';
 
 class AuthController {
-  static async register({ username, email, password }: { username: string; email: string; password: string }) {
+  static async register({
+    firstName,
+    lastName,
+    phoneNumber,
+    email,
+    password,
+  }: {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    email: string;
+    password: string;
+  }) {
     // validate user input
-    const { error } = registerSchema.validate({ username, email, password });
+    const { error } = registerSchema.validate({ firstName, lastName, phoneNumber, email, password });
 
     if (error) {
       return {
@@ -15,33 +27,35 @@ class AuthController {
         error: error.message,
       };
     }
-
     // check if user is already existing email or username
-    const existingUser = (await findUser({ email })) || (await findUser({ username }));
+    const existingUser = await findUser({ email });
 
     if (existingUser) {
       return {
         success: false,
-        error: 'User with same email or username already exists',
+        error: 'User with same email or names already exists',
       };
     }
-
     // hash the password
     const hashedPassword = await hashPassword(password);
 
     // save user to db
     const newUser = await createUser({
-      username,
+      firstName,
+      lastName,
+      phoneNumber,
       email,
       password: hashedPassword,
     });
+
+    // create account for user
+    await createAccount(newUser.id);
 
     // generate jwt Token
     const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {
       expiresIn: '1h',
     });
 
-    sendToQueue({ recipientEmail: email, purpose: 'welcome', username, otp: undefined });
     return {
       success: true,
       message: 'User registered successfully',
@@ -67,7 +81,6 @@ class AuthController {
         error: 'Email/password mismatch',
       };
     }
-
     // Compare the password
     const isMatch = await comparePasswords(password, user.password);
 

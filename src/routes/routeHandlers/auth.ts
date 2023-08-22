@@ -38,9 +38,9 @@ export const loginHandler: RequestHandler = async (req, res) => {
 
 export const registerHandler: RequestHandler = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { firstName, lastName, phoneNumber, email, password } = req.body;
 
-    const response = await AuthController.register({ username, email, password });
+    const response = await AuthController.register({ firstName, lastName, phoneNumber, email, password });
 
     if (!response.success) {
       if (response.error?.includes('already exists')) {

@@ -1,7 +1,9 @@
 import joi from 'joi';
 
 const registerSchema = joi.object({
-  username: joi.string().min(3).max(20).alphanum().required(),
+  firstName: joi.string().min(3).max(20).alphanum().required(),
+  lastName: joi.string().min(3).max(20).alphanum().required(),
+  phoneNumber: joi.string().min(10).max(15).required(),
   email: joi.string().email().lowercase().required(),
   password: joi.string().min(8).required(),
 });
@@ -28,8 +30,4 @@ const resetPasswordSchema = joi.object({
   code: joi.string().required().length(5),
 });
 
-const bioSchema = joi.object({
-  bio: joi.string().min(10).max(100).required(),
-});
-
-export { loginSchema, registerSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, idSchema, bioSchema };
+export { loginSchema, registerSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, idSchema };
