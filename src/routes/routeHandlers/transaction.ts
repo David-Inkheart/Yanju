@@ -13,7 +13,7 @@ export const transferTransactionHandler: RequestHandler = async (req, res) => {
     if (!response.success) {
       return res.status(400).json({
         success: response.success,
-        error: response.error,
+        message: response.message,
       });
     }
 
@@ -24,7 +24,7 @@ export const transferTransactionHandler: RequestHandler = async (req, res) => {
   } catch (err) {
     return res.status(500).json({
       success: false,
-      error: 'Internal server error',
+      message: 'Internal server error',
     });
   }
 };

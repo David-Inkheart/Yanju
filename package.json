@@ -10,7 +10,7 @@
     "prisma:generate": "npx prisma generate",
     "prisma:migrate:deploy": "npx prisma migrate deploy",
     "postinstall": "npm run build",
-    "dev": "nodemon --exec ts-node src/server.ts"
+    "dev": "nodemon dist/server.js"
   },
   "keywords": [],
   "author": "",

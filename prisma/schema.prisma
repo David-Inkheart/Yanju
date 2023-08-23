@@ -21,7 +21,7 @@ model User {
 model Account {
   id           Int           @id @default(autoincrement())
   userId       Int
-  user         User          @relation(fields: [userId], references: [id])
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   balance      Decimal       @default(0)
   createdAt    DateTime      @default(now()) @db.Timestamptz(3)
   transactions Transaction[]
