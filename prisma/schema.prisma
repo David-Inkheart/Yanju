@@ -9,20 +9,48 @@ datasource db {
 
 model User {
   id          Int       @id @default(autoincrement())
-  firstName   String    @default("")
-  lastName    String    @default("")
+  firstName   String
+  lastName    String
   email       String    @unique
   password    String
-  phoneNumber String    @default("")
-  createdAt   DateTime  @default(now())
+  phoneNumber String    @unique
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
   accounts    Account[]
 }
 
 model Account {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  balance   Decimal  @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  user         User          @relation(fields: [userId], references: [id])
+  balance      Decimal       @default(0)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id                   Int                @id @default(autoincrement())
+  accountId            Int
+  account              Account            @relation(fields: [accountId], references: [id])
+  reference            String
+  amount               Decimal
+  bal_before           Decimal
+  bal_after            Decimal
+  type                 TransactionType
+  subType              TransactionSubType @relation(fields: [transactionSubTypeId], references: [id])
+  createdAt            DateTime           @default(now()) @db.Timestamptz(3)
+  metadata             Json?
+  transactionSubTypeId Int
+}
+
+model TransactionSubType {
+  id          Int           @id @default(autoincrement())
+  name        String
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime      @updatedAt @db.Timestamptz(3)
+  Transaction Transaction[]
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
 }

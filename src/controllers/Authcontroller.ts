@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken';
 import { hashPassword, comparePasswords } from '../utils/passwordService';
 import { registerSchema, loginSchema } from '../utils/validators';
 import { createUser, findUser } from '../repositories/db.user';
-import { createAccount } from '../repositories/db.account';
 
 class AuthController {
   static async register({
@@ -39,7 +38,7 @@ class AuthController {
     // hash the password
     const hashedPassword = await hashPassword(password);
 
-    // save user to db
+    // create user and account
     const newUser = await createUser({
       firstName,
       lastName,
@@ -47,9 +46,6 @@ class AuthController {
       email,
       password: hashedPassword,
     });
-
-    // create account for user
-    await createAccount(newUser.id);
 
     // generate jwt Token
     const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET!, {

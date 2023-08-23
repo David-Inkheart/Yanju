@@ -30,4 +30,10 @@ const resetPasswordSchema = joi.object({
   code: joi.string().required().length(5),
 });
 
-export { loginSchema, registerSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, idSchema };
+const transferMoneySchema = joi.object({
+  amount: joi.number().positive().required(),
+  recipientId: idSchema,
+  senderId: idSchema,
+});
+
+export { loginSchema, registerSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, idSchema, transferMoneySchema };

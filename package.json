@@ -28,6 +28,7 @@
     "@types/pug": "^2.0.6",
     "@types/redis-mock": "^0.17.1",
     "@types/supertest": "^2.0.12",
+    "@types/uuid": "^9.0.2",
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "@typescript-eslint/parser": "^5.60.1",
     "esbuild-register": "^3.4.2",
@@ -60,6 +61,7 @@
     "nodemailer": "^6.9.3",
     "pug": "^3.0.2",
     "redis": "^4.6.7",
-    "redis-mock": "^0.56.3"
+    "redis-mock": "^0.56.3",
+    "uuid": "^9.0.0"
   }
 }

@@ -10,7 +10,14 @@ export const createAccount = (userId: number) => {
   });
 };
 
-// find account by id
-export const findAccount = (data: Prisma.AccountWhereUniqueInput) => {
-  return prisma.account.findUnique({ where: data });
+export const findAccountUser = (data: Prisma.UserWhereUniqueInput) => {
+  return prisma.user.findUnique({ where: data, include: { accounts: true } });
+};
+
+export const updateAccountBalance = (senderData: Prisma.AccountUpdateArgs, recipientData: Prisma.AccountUpdateArgs) => {
+  return prisma.$transaction([prisma.account.update(senderData), prisma.account.update(recipientData)]);
+};
+
+export const recordTransaction = (data: Prisma.TransactionCreateInput) => {
+  return prisma.transaction.create({ data });
 };

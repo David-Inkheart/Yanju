@@ -4,13 +4,14 @@ import express from 'express';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 import { getHomeHandler } from './routeHandlers/home';
+import { transferTransactionHandler } from './routeHandlers/transaction';
 
 // instatiate router
 const router = express.Router();
 
 // get home page
 router.get('/', getHomeHandler);
-// POST: User registration
+// POST: User signup
 router.post('/auth/register', registerHandler);
 // POST: User login
 router.post('/auth/login', loginHandler);
@@ -23,5 +24,7 @@ router.post('/auth/reset-password/confirm', confirmResetPasswordHandler);
 router.use(authMiddleware);
 // POST: auth user change password
 router.post('/auth/change-password', changePasswordHandler);
+// POST: auth user transfer money
+router.post('/auth/transfer/:id', transferTransactionHandler);
 
 export default router;
