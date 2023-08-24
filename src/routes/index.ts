@@ -25,6 +25,6 @@ router.use(authMiddleware);
 // POST: auth user change password
 router.post('/auth/change-password', changePasswordHandler);
 // POST: auth user transfer money
-router.post('/auth/transfer/:id', transferTransactionHandler);
+router.post('/transfer', transferTransactionHandler);
 
 export default router;
