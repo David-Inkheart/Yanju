@@ -58,7 +58,7 @@ async function transfer(from: number, to: number, amount: number) {
             balanceBefore: recipientBalance,
             balanceAfter: Number(recipientUpdatedBalance),
             subTypeId: subType.id,
-            type: 'DEBIT',
+            type: 'CREDIT',
             reference,
           },
           tx,
