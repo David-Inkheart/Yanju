@@ -1,8 +1,14 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import prisma from '../utils/db.server';
+
+export type PrismaTransaction = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
 
 export const findUser = (data: Prisma.UserWhereUniqueInput) => {
   return prisma.user.findUnique({ where: data });
+};
+
+export const findUserWithOptionalTxn = (data: Prisma.UserWhereUniqueInput, txn?: PrismaTransaction) => {
+  return txn ? txn.user.findUnique({ where: data }) : prisma.user.findUnique({ where: data });
 };
 
 // create user with an account

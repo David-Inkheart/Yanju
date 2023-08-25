@@ -4,11 +4,10 @@ import TransactionController from '../../controllers/TransactionController';
 
 export const transferTransactionHandler: RequestHandler = async (req, res) => {
   try {
-    const { amount } = req.body;
-    const recipientId = Number(req.params.id);
+    const { amount, recipientId } = req.body;
     const senderId = req.userId as UserId;
 
-    const response = await TransactionController.transferMoney({ amount, recipientId, senderId });
+    const response = await TransactionController.transferMoney({ amount, recipientId: Number(recipientId), senderId });
 
     if (!response.success) {
       return res.status(400).json({
