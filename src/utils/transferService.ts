@@ -1,35 +1,29 @@
 import { v4 as uuidv4 } from 'uuid';
 import prisma from './db.server';
 import { findUserWithOptionalTxn } from '../repositories/db.user';
-import {
-  findAccountbyUserId,
-  getSubType,
-  recordRecipientTransaction,
-  recordSenderTransaction,
-  updateRecipientAccountBalance,
-  updateSenderAccountBalance,
-} from '../repositories/db.account';
+import { creditAccount, debitAccount, findAccountbyUserId, getSubType, recordTransaction } from '../repositories/db.account';
 
 async function transfer(from: number, to: number, amount: number) {
+  const recipient = await findUserWithOptionalTxn({ id: to });
+
+  if (!recipient) {
+    return {
+      success: false,
+      message: 'Account not found',
+    };
+  }
+
+  const reference = uuidv4();
+
+  const subType = await getSubType('TRANSFER');
+
+  if (!subType) throw new Error('Could not find subtype');
+
   return prisma.$transaction(
     async (tx) => {
-      const [sender, recipient] = await Promise.all([findUserWithOptionalTxn({ id: from }, tx), findUserWithOptionalTxn({ id: to }, tx)]);
-
-      if (!sender || !recipient) {
-        return {
-          success: false,
-          message: 'Account not found',
-        };
-      }
-
       const [senderAccount, recipientAccount] = await Promise.all([findAccountbyUserId(from, tx), findAccountbyUserId(to, tx)]);
 
-      if (!senderAccount || !recipientAccount) {
-        return {
-          success: false,
-          message: 'Account not found',
-        };
-      }
+      if (!senderAccount || !recipientAccount) throw new Error('Could not find account');
 
       const senderBalance = Number(senderAccount[0].balance);
       const recipientBalance = Number(recipientAccount[0].balance);
@@ -41,34 +35,36 @@ async function transfer(from: number, to: number, amount: number) {
         };
       }
 
-      await updateSenderAccountBalance(senderAccount[0].id, amount, tx);
-      await updateRecipientAccountBalance(recipientAccount[0].id, amount, tx);
+      const { balance: recipientUpdtedBalance } = await creditAccount({ amount, accountId: recipientAccount[0].id, txn: tx });
+      const { balance: senderUpdatedBalance } = await debitAccount({ amount, accountId: senderAccount[0].id, txn: tx });
 
-      const reference = uuidv4();
+      await Promise.all([
+        recordTransaction(
+          {
+            amount,
+            balanceAfter: Number(senderUpdatedBalance),
+            balanceBefore: senderBalance,
+            type: 'DEBIT',
+            reference,
+            subTypeId: subType!.id,
+            accountId: senderAccount[0].id,
+          },
+          tx,
+        ),
 
-      const subType = await getSubType(tx);
-
-      await recordSenderTransaction(
-        {
-          amount,
-          senderBalance,
-          senderAccountId: senderAccount[0].id,
-          subTypeId: subType!.id,
-          reference,
-        },
-        tx,
-      );
-
-      await recordRecipientTransaction(
-        {
-          amount,
-          recipientBalance,
-          recipientAccountId: recipientAccount[0].id,
-          subTypeId: subType!.id,
-          reference,
-        },
-        tx,
-      );
+        recordTransaction(
+          {
+            amount,
+            balanceAfter: Number(recipientUpdtedBalance),
+            balanceBefore: recipientBalance,
+            type: 'CREDIT',
+            reference,
+            subTypeId: subType!.id,
+            accountId: recipientAccount[0].id,
+          },
+          tx,
+        ),
+      ]);
 
       return {
         success: true,
