@@ -36,4 +36,26 @@ const transferMoneySchema = joi.object({
   senderId: idSchema,
 });
 
-export { loginSchema, registerSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, idSchema, transferMoneySchema };
+const transactionHistorySchema = joi
+  .object({
+    limit: joi.number().integer().min(1),
+    offset: joi.number().integer().min(0),
+    type: joi.string().valid('DEBIT', 'CREDIT'),
+    sub_type: joi.string().valid('TRANSFER', 'DEPOSIT', 'WITHDRAWAL', 'BANK_CHARGE', 'POS_TRANSACTION'),
+    startDate: joi.date().iso(),
+    endDate: joi.date().iso(),
+  })
+  // .xor('limit', 'startDate')
+  .with('limit', 'offset')
+  .with('startDate', 'endDate');
+
+export {
+  loginSchema,
+  registerSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  idSchema,
+  transferMoneySchema,
+  transactionHistorySchema,
+};

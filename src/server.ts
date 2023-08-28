@@ -35,6 +35,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   return res.status(500).json({
     success: false,
     message: 'There was a problem processing your request, please try again later',
+    error: err.message,
   });
 });
 

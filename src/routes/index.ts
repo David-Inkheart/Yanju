@@ -4,7 +4,7 @@ import express from 'express';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 import { getHomeHandler } from './routeHandlers/home';
-import { transferTransactionHandler } from './routeHandlers/transaction';
+import { getTransactionsHandler, transferTransactionHandler } from './routeHandlers/transaction';
 
 // instatiate router
 const router = express.Router();
@@ -25,6 +25,8 @@ router.use(authMiddleware);
 // POST: auth user change password
 router.post('/auth/change-password', changePasswordHandler);
 // POST: auth user transfer money
-router.post('/transfer', transferTransactionHandler);
+router.post('/transfer/:recipientId', transferTransactionHandler);
+// GET: auth user get transactions
+router.get('/transactionHistory', getTransactionsHandler);
 
 export default router;

@@ -108,3 +108,73 @@ export const recordTransaction = (
         },
       });
 };
+
+export const getTransactions = ({ userId, limit, offset }: { userId: number; limit?: number; offset?: number }) => {
+  return prisma.account.findFirst({ where: { userId } }).transactions({
+    take: limit || 10,
+    skip: offset || 0,
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+};
+
+export const getTransactionsByType = ({
+  userId,
+  limit,
+  offset,
+  type,
+}: {
+  userId: number;
+  limit?: number;
+  offset?: number;
+  type?: 'DEBIT' | 'CREDIT';
+}) =>
+  prisma.account.findFirst({ where: { userId } }).transactions({
+    take: limit || 10,
+    skip: offset || 0,
+    orderBy: {
+      createdAt: 'desc',
+    },
+    where: type ? { type } : undefined,
+    include: { subType: true },
+  });
+
+export const getTransactionsBySubType = ({ userId, limit, offset, subType }: { userId: number; limit?: number; offset?: number; subType: string }) =>
+  prisma.account.findFirst({ where: { userId } }).transactions({
+    take: limit || 10,
+    skip: offset || 0,
+    orderBy: { createdAt: 'desc' },
+    where: {
+      subType: {
+        name: subType,
+      },
+    },
+    include: { subType: true },
+  });
+
+export const getTransactionsByDate = ({
+  userId,
+  limit,
+  offset,
+  startDate,
+  endDate,
+}: {
+  userId: number;
+  limit?: number;
+  offset?: number;
+  startDate: string;
+  endDate: string;
+}) =>
+  prisma.account.findFirst({ where: { userId } }).transactions({
+    take: limit || 10,
+    skip: offset || 0,
+    orderBy: { createdAt: 'desc' },
+    where: {
+      createdAt: {
+        gte: new Date(startDate).toISOString(), // format appears as "2023-08-24T00:00:00.000Z"
+        lte: startDate === endDate ? new Date().toISOString() : new Date(endDate).toISOString(),
+      },
+    },
+    include: { subType: true },
+  });
