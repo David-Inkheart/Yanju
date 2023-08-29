@@ -27,6 +27,6 @@ router.post('/auth/change-password', changePasswordHandler);
 // POST: auth user transfer money
 router.post('/transfer/:recipientId', transferTransactionHandler);
 // GET: auth user get transactions
-router.get('/transactionHistory', getTransactionsHandler);
+router.get('/transactions', getTransactionsHandler);
 
 export default router;

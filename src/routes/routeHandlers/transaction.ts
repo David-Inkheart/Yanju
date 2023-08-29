@@ -33,16 +33,26 @@ export const transferTransactionHandler: RequestHandler = async (req, res) => {
 export const getTransactionsHandler: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId as UserId;
-    const { limit, page, type, sub_type, from, to } = req.query;
+    const { limit = 10, page = 1, type, sub_type, from, to } = req.query;
+
+    const Page = Number(page);
+    const Limit = Number(limit);
+
+    if (Page < 1 || Limit < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Page and limit must be greater than 0',
+      });
+    }
 
     const response = await TransactionController.getTransactionHistory({
       userId,
-      limit: Number(limit),
-      page: Number(page),
+      limit: Limit,
+      page: Page,
       type: type as 'DEBIT' | 'CREDIT',
       sub_type: sub_type as string,
-      from: from ? (from as string) : undefined,
-      to: to ? (to as string) : undefined,
+      from: from as string,
+      to: to as string,
     });
 
     if (!response.success) {
@@ -55,8 +65,8 @@ export const getTransactionsHandler: RequestHandler = async (req, res) => {
     const paginatedTransactions = paginate({
       records: response.data?.transactions || [],
       totalItems: response.data?.totalRecords || 0,
-      page: Number(page),
-      limit: Number(limit),
+      page: Page,
+      limit: Limit,
     });
 
     return res.json({
@@ -68,7 +78,6 @@ export const getTransactionsHandler: RequestHandler = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: err.message,
     });
   }
 };

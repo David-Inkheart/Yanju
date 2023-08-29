@@ -1,6 +1,6 @@
 import { transactionHistorySchema, transferMoneySchema } from '../utils/validators';
 import transfer from '../utils/transferService';
-import { getTransactions } from '../repositories/db.account';
+import { getTransactions } from '../repositories/db.transaction';
 
 interface TransferParams {
   amount: number;
