@@ -110,10 +110,56 @@ export const recordTransaction = (
       });
 };
 
-export const getTransactions = ({
+// export const getTransactions = ({
+//   userId,
+//   limit,
+//   page,
+//   from,
+//   to,
+//   type,
+//   sub_type,
+// }: {
+//   userId: number;
+//   limit?: number;
+//   page?: number;
+//   from?: string;
+//   to?: string;
+//   type?: 'DEBIT' | 'CREDIT';
+//   sub_type?: string;
+// }) => {
+//   return prisma.account
+//     .findFirst({
+//       where: { userId },
+//       include: { _count: { select: { transactions: true } } },
+//     })
+//     .transactions({
+//       take: limit || 10,
+//       skip: page ? (page - 1) * limit! : 0,
+//       orderBy: {
+//         createdAt: 'desc',
+//       },
+//       where: {
+//         AND: [
+//           {
+//             createdAt: {
+//               gte: from ? new Date(from).toISOString() : undefined,
+//               lte: to ? new Date(to).toISOString() : undefined,
+//             },
+//             type: type || undefined,
+//             subType: {
+//               name: sub_type || undefined,
+//             },
+//           },
+//         ],
+//       },
+//       include: { subType: true },
+//     });
+// };
+
+export const getTransactions = async ({
   userId,
   limit,
-  offset,
+  page,
   from,
   to,
   type,
@@ -121,92 +167,53 @@ export const getTransactions = ({
 }: {
   userId: number;
   limit?: number;
-  offset?: number;
+  page?: number;
   from?: string;
   to?: string;
   type?: 'DEBIT' | 'CREDIT';
   sub_type?: string;
 }) => {
-  return prisma.account.findFirst({ where: { userId } }).transactions({
-    take: limit || 10,
-    skip: offset || 0,
-    orderBy: {
-      createdAt: 'desc',
-    },
-    where: {
-      AND: [
-        {
-          createdAt: {
-            gte: from ? new Date(from).toISOString() : undefined,
-            lte: to ? new Date(to).toISOString() : undefined,
-          },
-          type: type || undefined,
-          subType: {
-            name: sub_type || undefined,
-          },
+  const account = await prisma.account.findFirst({ where: { userId } });
+  const data = await prisma.$transaction([
+    prisma.transaction.count({
+      where: {
+        accountId: account!.id,
+        createdAt: {
+          gte: from ? new Date(from).toISOString() : undefined,
+          lte: to ? new Date(to).toISOString() : undefined,
         },
-      ],
-    },
-    include: { subType: true },
-  });
+        type: type || undefined,
+        subType: {
+          name: sub_type || undefined,
+        },
+      },
+    }),
+
+    prisma.transaction.findMany({
+      take: limit || 10,
+      skip: page ? (page - 1) * limit! : 0,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      where: {
+        accountId: account!.id,
+        createdAt: {
+          gte: from ? new Date(from).toISOString() : undefined,
+          lte: to ? new Date(to).toISOString() : undefined,
+        },
+        type: type || undefined,
+        subType: {
+          name: sub_type || undefined,
+        },
+      },
+      include: { subType: true },
+    }),
+  ]);
+
+  const [totalRecords, transactions] = data;
+
+  return {
+    totalRecords,
+    transactions,
+  };
 };
-
-export const getTransactionsByType = ({
-  userId,
-  limit,
-  offset,
-  type,
-}: {
-  userId: number;
-  limit?: number;
-  offset?: number;
-  type?: 'DEBIT' | 'CREDIT';
-}) =>
-  prisma.account.findFirst({ where: { userId } }).transactions({
-    take: limit || 10,
-    skip: offset || 0,
-    orderBy: {
-      createdAt: 'desc',
-    },
-    where: type ? { type } : undefined,
-    include: { subType: true },
-  });
-
-export const getTransactionsBySubType = ({ userId, limit, offset, subType }: { userId: number; limit?: number; offset?: number; subType: string }) =>
-  prisma.account.findFirst({ where: { userId } }).transactions({
-    take: limit || 10,
-    skip: offset || 0,
-    orderBy: { createdAt: 'desc' },
-    where: {
-      subType: {
-        name: subType,
-      },
-    },
-    include: { subType: true },
-  });
-
-export const getTransactionsByDate = ({
-  userId,
-  limit,
-  offset,
-  startDate,
-  endDate,
-}: {
-  userId: number;
-  limit?: number;
-  offset?: number;
-  startDate: string;
-  endDate: string;
-}) =>
-  prisma.account.findFirst({ where: { userId } }).transactions({
-    take: limit || 10,
-    skip: offset || 0,
-    orderBy: { createdAt: 'desc' },
-    where: {
-      createdAt: {
-        gte: new Date(startDate).toISOString(), // format appears as "2023-08-24T00:00:00.000Z"
-        lte: startDate === endDate ? new Date().toISOString() : new Date(endDate).toISOString(),
-      },
-    },
-    include: { subType: true },
-  });

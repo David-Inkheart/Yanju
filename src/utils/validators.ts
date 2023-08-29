@@ -39,14 +39,14 @@ const transferMoneySchema = joi.object({
 const transactionHistorySchema = joi
   .object({
     limit: joi.number().integer().min(1),
-    offset: joi.number().integer().min(0),
+    page: joi.number().integer().min(0),
     type: joi.string().valid('DEBIT', 'CREDIT'),
     sub_type: joi.string().valid('TRANSFER', 'DEPOSIT', 'WITHDRAWAL', 'BANK_CHARGE', 'POS_TRANSACTION'),
     from: joi.date().iso(),
     to: joi.date().iso(),
   })
   // .xor('limit', 'startDate')
-  .with('limit', 'offset')
+  .with('limit', 'page')
   .with('startDate', 'endDate');
 
 export {

@@ -34,7 +34,7 @@ class TransactionController {
   static async getTransactionHistory({
     userId,
     limit,
-    offset,
+    page,
     type,
     sub_type,
     from,
@@ -42,13 +42,13 @@ class TransactionController {
   }: {
     userId: number;
     limit?: number;
-    offset?: number;
+    page: number;
     type?: 'DEBIT' | 'CREDIT';
     sub_type?: string;
     from?: string;
     to?: string;
   }) {
-    const { error } = transactionHistorySchema.validate({ limit, offset, type, sub_type, from, to });
+    const { error } = transactionHistorySchema.validate({ limit, page, type, sub_type, from, to });
     if (error) {
       return {
         success: false,
@@ -56,7 +56,7 @@ class TransactionController {
       };
     }
 
-    const transactions = await getTransactions({ userId, limit, offset, from, to, type, sub_type });
+    const transactions = await getTransactions({ userId, limit, page, from, to, type, sub_type });
 
     return {
       success: true,

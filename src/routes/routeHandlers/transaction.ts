@@ -1,6 +1,7 @@
 import { RequestHandler } from 'express';
 import { UserId } from '../../types/custom';
 import TransactionController from '../../controllers/TransactionController';
+import paginate from '../../utils/pagination';
 
 export const transferTransactionHandler: RequestHandler = async (req, res) => {
   try {
@@ -32,29 +33,36 @@ export const transferTransactionHandler: RequestHandler = async (req, res) => {
 export const getTransactionsHandler: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId as UserId;
-    const { limit, offset, type, sub_type, from, to } = req.query;
+    const { limit, page, type, sub_type, from, to } = req.query;
 
-    const transactions = await TransactionController.getTransactionHistory({
+    const response = await TransactionController.getTransactionHistory({
       userId,
       limit: Number(limit),
-      offset: Number(offset),
+      page: Number(page),
       type: type as 'DEBIT' | 'CREDIT',
       sub_type: sub_type as string,
       from: from ? (from as string) : undefined,
       to: to ? (to as string) : undefined,
     });
 
-    if (!transactions.success) {
+    if (!response.success) {
       return res.status(400).json({
         success: false,
-        message: transactions.message,
+        message: response.message,
       });
     }
 
+    const paginatedTransactions = paginate({
+      records: response.data?.transactions || [],
+      totalItems: response.data?.totalRecords || 0,
+      page: Number(page),
+      limit: Number(limit),
+    });
+
     return res.json({
       success: true,
-      message: transactions.message,
-      data: transactions.data || [],
+      message: response.message,
+      data: paginatedTransactions,
     });
   } catch (err: any) {
     return res.status(500).json({
