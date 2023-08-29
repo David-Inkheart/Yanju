@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import { Account, Prisma } from '@prisma/client';
 import prisma from '../utils/db.server';
 
@@ -115,12 +116,16 @@ export const getTransactions = ({
   offset,
   from,
   to,
+  type,
+  sub_type,
 }: {
   userId: number;
   limit?: number;
   offset?: number;
   from?: string;
   to?: string;
+  type?: 'DEBIT' | 'CREDIT';
+  sub_type?: string;
 }) => {
   return prisma.account.findFirst({ where: { userId } }).transactions({
     take: limit || 10,
@@ -128,7 +133,20 @@ export const getTransactions = ({
     orderBy: {
       createdAt: 'desc',
     },
-    where: from && to ? { createdAt: { gte: new Date(from), lte: new Date(to) } } : undefined,
+    where: {
+      AND: [
+        {
+          createdAt: {
+            gte: from ? new Date(from).toISOString() : undefined,
+            lte: to ? new Date(to).toISOString() : undefined,
+          },
+          type: type || undefined,
+          subType: {
+            name: sub_type || undefined,
+          },
+        },
+      ],
+    },
     include: { subType: true },
   });
 };

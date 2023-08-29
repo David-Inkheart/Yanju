@@ -56,35 +56,7 @@ class TransactionController {
       };
     }
 
-    let transactions = await getTransactions({ userId, limit, offset });
-
-    if (from && to) {
-      transactions = await getTransactions({ userId, limit, offset, from, to });
-      if (type) {
-        transactions = transactions!.filter((txn) => txn.type === type);
-      }
-      if (sub_type) {
-        transactions = transactions!.filter((txn) => txn.subType.name === sub_type);
-      }
-      if (type && sub_type) {
-        transactions = transactions!.filter((txn) => txn.type === type && txn.subType.name === sub_type);
-      }
-    }
-
-    if (type) {
-      transactions = transactions!.filter((txn) => txn.type === type);
-      if (sub_type) {
-        transactions = transactions!.filter((txn) => txn.subType.name === sub_type);
-      }
-    }
-
-    if (sub_type) {
-      transactions = transactions!.filter((txn) => txn.subType.name === sub_type);
-      if (type) {
-        transactions = transactions!.filter((txn) => txn.type === type);
-      }
-    }
-    // console.log(transactions!.map((txn) => txn.createdAt));
+    const transactions = await getTransactions({ userId, limit, offset, from, to, type, sub_type });
 
     return {
       success: true,
