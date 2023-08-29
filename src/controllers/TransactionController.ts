@@ -1,6 +1,6 @@
 import { transactionHistorySchema, transferMoneySchema } from '../utils/validators';
 import transfer from '../utils/transferService';
-import { getTransactionsByType, getTransactionsByDate, getTransactionsBySubType, getTransactions } from '../repositories/db.account';
+import { getTransactions } from '../repositories/db.account';
 
 interface TransferParams {
   amount: number;
@@ -37,18 +37,18 @@ class TransactionController {
     offset,
     type,
     sub_type,
-    startDate,
-    endDate,
+    from,
+    to,
   }: {
     userId: number;
     limit?: number;
     offset?: number;
     type?: 'DEBIT' | 'CREDIT';
     sub_type?: string;
-    startDate?: string;
-    endDate?: string;
+    from?: string;
+    to?: string;
   }) {
-    const { error } = transactionHistorySchema.validate({ limit, offset, type, sub_type, startDate, endDate });
+    const { error } = transactionHistorySchema.validate({ limit, offset, type, sub_type, from, to });
     if (error) {
       return {
         success: false,
@@ -58,16 +58,31 @@ class TransactionController {
 
     let transactions = await getTransactions({ userId, limit, offset });
 
+    if (from && to) {
+      transactions = await getTransactions({ userId, limit, offset, from, to });
+      if (type) {
+        transactions = transactions!.filter((txn) => txn.type === type);
+      }
+      if (sub_type) {
+        transactions = transactions!.filter((txn) => txn.subType.name === sub_type);
+      }
+      if (type && sub_type) {
+        transactions = transactions!.filter((txn) => txn.type === type && txn.subType.name === sub_type);
+      }
+    }
+
     if (type) {
-      transactions = await getTransactionsByType({ userId, limit, offset, type });
+      transactions = transactions!.filter((txn) => txn.type === type);
+      if (sub_type) {
+        transactions = transactions!.filter((txn) => txn.subType.name === sub_type);
+      }
     }
 
     if (sub_type) {
-      transactions = await getTransactionsBySubType({ userId, limit, offset, subType: sub_type });
-    }
-
-    if (startDate && endDate) {
-      transactions = await getTransactionsByDate({ userId, limit, offset, startDate, endDate });
+      transactions = transactions!.filter((txn) => txn.subType.name === sub_type);
+      if (type) {
+        transactions = transactions!.filter((txn) => txn.type === type);
+      }
     }
     // console.log(transactions!.map((txn) => txn.createdAt));
 

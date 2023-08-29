@@ -42,8 +42,8 @@ const transactionHistorySchema = joi
     offset: joi.number().integer().min(0),
     type: joi.string().valid('DEBIT', 'CREDIT'),
     sub_type: joi.string().valid('TRANSFER', 'DEPOSIT', 'WITHDRAWAL', 'BANK_CHARGE', 'POS_TRANSACTION'),
-    startDate: joi.date().iso(),
-    endDate: joi.date().iso(),
+    from: joi.date().iso(),
+    to: joi.date().iso(),
   })
   // .xor('limit', 'startDate')
   .with('limit', 'offset')

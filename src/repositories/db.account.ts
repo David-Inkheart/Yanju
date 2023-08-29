@@ -109,13 +109,27 @@ export const recordTransaction = (
       });
 };
 
-export const getTransactions = ({ userId, limit, offset }: { userId: number; limit?: number; offset?: number }) => {
+export const getTransactions = ({
+  userId,
+  limit,
+  offset,
+  from,
+  to,
+}: {
+  userId: number;
+  limit?: number;
+  offset?: number;
+  from?: string;
+  to?: string;
+}) => {
   return prisma.account.findFirst({ where: { userId } }).transactions({
     take: limit || 10,
     skip: offset || 0,
     orderBy: {
       createdAt: 'desc',
     },
+    where: from && to ? { createdAt: { gte: new Date(from), lte: new Date(to) } } : undefined,
+    include: { subType: true },
   });
 };
 
