@@ -33,16 +33,16 @@ export const transferTransactionHandler: RequestHandler = async (req, res) => {
 export const getTransactionsHandler: RequestHandler = async (req, res) => {
   try {
     const userId = req.userId as UserId;
-    const { limit, page, type, sub_type, from, to } = req.query;
+    const { limit = 10, page = 1, type, sub_type, from, to } = req.query;
 
     const response = await TransactionController.getTransactionHistory({
       userId,
-      limit: Number(limit),
-      page: Number(page),
+      limit: limit as unknown as number,
+      page: page as unknown as number,
       type: type as 'DEBIT' | 'CREDIT',
       sub_type: sub_type as string,
-      from: from ? (from as string) : undefined,
-      to: to ? (to as string) : undefined,
+      from: from as string,
+      to: to as string,
     });
 
     if (!response.success) {
