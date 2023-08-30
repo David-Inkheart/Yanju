@@ -38,13 +38,6 @@ export const getTransactionsHandler: RequestHandler = async (req, res) => {
     const Page = Number(page);
     const Limit = Number(limit);
 
-    if (Page < 1 || Limit < 1) {
-      return res.status(400).json({
-        success: false,
-        message: 'Page and limit must be greater than 0',
-      });
-    }
-
     const response = await TransactionController.getTransactionHistory({
       userId,
       limit: Limit,
