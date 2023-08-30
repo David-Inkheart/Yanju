@@ -1,6 +1,8 @@
 import { transactionHistorySchema, transferMoneySchema } from '../utils/validators';
 import transfer from '../utils/transferService';
 import { getTransactions } from '../repositories/db.transaction';
+import hashArguments from '../utils/hash';
+import isDuplicateTxn from '../utils/checkTransaction';
 
 interface TransferParams {
   amount: number;
@@ -23,6 +25,16 @@ class TransactionController {
       return {
         success: false,
         message: 'You cannot transfer money to yourself',
+      };
+    }
+
+    const hashedArgs = hashArguments(amount, recipientId, senderId);
+    const isDuplicate = await isDuplicateTxn(senderId.toString(), hashedArgs);
+
+    if (isDuplicate) {
+      return {
+        success: false,
+        message: 'Duplicate transaction',
       };
     }
 
