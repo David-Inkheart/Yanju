@@ -36,6 +36,11 @@ const transferMoneySchema = joi.object({
   senderId: idSchema,
 });
 
+const fundSchema = joi.object({
+  amount: joi.number().positive().required(),
+  userId: idSchema,
+});
+
 const transactionHistorySchema = joi
   .object({
     limit: joi.number().integer().min(1),
@@ -58,4 +63,5 @@ export {
   idSchema,
   transferMoneySchema,
   transactionHistorySchema,
+  fundSchema,
 };

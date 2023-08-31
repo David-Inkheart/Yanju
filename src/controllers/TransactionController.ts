@@ -1,8 +1,11 @@
-import { transactionHistorySchema, transferMoneySchema } from '../utils/validators';
+import { fundSchema, transactionHistorySchema, transferMoneySchema } from '../utils/validators';
 import transfer from '../utils/transferService';
 import { getTransactions } from '../repositories/db.transaction';
 import hashArguments from '../utils/hash';
 import isDuplicateTxn from '../utils/checkTransaction';
+import { findAccountbyUserId } from '../repositories/db.account';
+import { findUser } from '../repositories/db.user';
+import { initPay } from '../services/email/paystack';
 
 interface TransferParams {
   amount: number;
@@ -28,8 +31,9 @@ class TransactionController {
       };
     }
 
-    const hashedArgs = hashArguments(amount, recipientId, senderId);
-    const isDuplicate = await isDuplicateTxn(senderId.toString(), hashedArgs);
+    const [senderAccount, recipientAccount] = await Promise.all([findAccountbyUserId(senderId), findAccountbyUserId(recipientId)]);
+    const hashedArgs = hashArguments(amount, senderAccount[0].id, recipientAccount[0].id);
+    const isDuplicate = await isDuplicateTxn(senderAccount[0].id.toString(), hashedArgs);
 
     if (isDuplicate) {
       return {
@@ -75,6 +79,23 @@ class TransactionController {
       message: 'Transactions fetched successfully',
       data: transactions,
     };
+  }
+
+  static async fundAccount(userId: number, amount: number) {
+    const { error } = fundSchema.validate({ amount, userId });
+
+    if (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+
+    const user = await findUser({ id: userId });
+
+    const result = await initPay({ email: user!.email, amount, metadata: {} });
+
+    return result;
   }
 }
 

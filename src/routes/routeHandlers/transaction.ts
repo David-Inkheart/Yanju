@@ -74,3 +74,30 @@ export const getTransactionsHandler: RequestHandler = async (req, res) => {
     });
   }
 };
+
+export const fundAccountHandler: RequestHandler = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const senderId = req.userId as UserId;
+
+    const response = await TransactionController.fundAccount(senderId, amount);
+
+    if (!response.status) {
+      return res.status(400).json({
+        success: response.status,
+        message: response.message,
+      });
+    }
+
+    return res.json({
+      success: response.status,
+      message: response.message,
+      data: response.data,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};

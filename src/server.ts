@@ -3,7 +3,6 @@ import cors from 'cors';
 
 import router from './routes/index';
 import { jwtErrorHandler } from './middleWares/error-handlers';
-// import transfer from './utils/transferService';
 
 const app = express();
 
@@ -42,60 +41,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 app.listen(Port, () => {
   // eslint-disable-next-line no-console
   console.log(`REST API server is running on http://localhost:${Port}`);
-  // Promise.all([
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  //   transfer(2, 1, 100000),
-  // ])
-  //   .then(console.log)
-  //   .catch(console.log);
 });
 
 export default app;
