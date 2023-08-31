@@ -5,7 +5,7 @@ import hashArguments from '../utils/hash';
 import isDuplicateTxn from '../utils/checkTransaction';
 import { findAccountbyUserId } from '../repositories/db.account';
 import { findUser } from '../repositories/db.user';
-import { initPay } from '../services/email/paystack';
+import { initPay } from '../services/paystack/paystack';
 import { TransferParams } from '../types/custom';
 
 class TransactionController {
