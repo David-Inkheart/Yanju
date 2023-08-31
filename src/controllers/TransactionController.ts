@@ -6,12 +6,7 @@ import isDuplicateTxn from '../utils/checkTransaction';
 import { findAccountbyUserId } from '../repositories/db.account';
 import { findUser } from '../repositories/db.user';
 import { initPay } from '../services/email/paystack';
-
-interface TransferParams {
-  amount: number;
-  recipientId: number;
-  senderId: number;
-}
+import { TransferParams } from '../types/custom';
 
 class TransactionController {
   static async transferMoney({ amount, recipientId, senderId }: TransferParams) {
