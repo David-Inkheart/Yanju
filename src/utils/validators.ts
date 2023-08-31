@@ -37,7 +37,7 @@ const transferMoneySchema = joi.object({
 });
 
 const fundSchema = joi.object({
-  amount: joi.number().positive().required(),
+  amount: joi.number().integer().min(100).required(),
   userId: idSchema,
 });
 

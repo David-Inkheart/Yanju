@@ -78,9 +78,9 @@ export const getTransactionsHandler: RequestHandler = async (req, res) => {
 export const fundAccountHandler: RequestHandler = async (req, res) => {
   try {
     const { amount } = req.body;
-    const senderId = req.userId as UserId;
+    const userId = req.userId as UserId;
 
-    const response = await TransactionController.fundAccount(senderId, amount);
+    const response = await TransactionController.fundAccount(userId, amount);
 
     if (!response.status) {
       return res.status(400).json({
