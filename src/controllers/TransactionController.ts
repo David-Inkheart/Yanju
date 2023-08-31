@@ -1,8 +1,8 @@
 import { fundSchema, transactionHistorySchema, transferMoneySchema } from '../utils/validators';
-import transfer from '../utils/transferService';
+import transfer from '../utils/transactions/transferService';
 import { getTransactions } from '../repositories/db.transaction';
 import hashArguments from '../utils/hash';
-import isDuplicateTxn from '../utils/checkTransaction';
+import isDuplicateTxn from '../utils/transactions/checkTransaction';
 import { findAccountbyUserId } from '../repositories/db.account';
 import { findUser } from '../repositories/db.user';
 import { initPay } from '../services/paystack/paystack';
@@ -76,7 +76,7 @@ class TransactionController {
     };
   }
 
-  static async fundAccount(userId: number, amount: number) {
+  static async fundAccountInit(userId: number, amount: number) {
     const { error } = fundSchema.validate({ amount, userId });
 
     if (error) {

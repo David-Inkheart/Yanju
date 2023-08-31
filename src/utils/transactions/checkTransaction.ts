@@ -1,4 +1,4 @@
-import { storeTxnArgs, getTxnArgs } from '../repositories/redis.txn';
+import { storeTxnArgs, getTxnArgs } from '../../repositories/redis.txn';
 
 export default async function isDuplicateTxn(key: string, hash: string) {
   const result = await getTxnArgs(key);

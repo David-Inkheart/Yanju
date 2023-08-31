@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
-import prisma from './db.server';
-import { findUserWithOptionalTxn } from '../repositories/db.user';
-import { creditAccount, debitAccount, findAccountbyUserId, getSubType } from '../repositories/db.account';
-import { recordTransaction } from '../repositories/db.transaction';
+import prisma from '../db.server';
+import { findUserWithOptionalTxn } from '../../repositories/db.user';
+import { creditAccount, debitAccount, findAccountbyUserId, getSubType } from '../../repositories/db.account';
+import { recordTransaction } from '../../repositories/db.transaction';
 
 async function transfer(from: number, to: number, amount: number) {
   const recipient = await findUserWithOptionalTxn({ id: to });

@@ -80,7 +80,7 @@ export const fundAccountHandler: RequestHandler = async (req, res) => {
     const { amount } = req.body;
     const userId = req.userId as UserId;
 
-    const response = await TransactionController.fundAccount(userId, amount);
+    const response = await TransactionController.fundAccountInit(userId, amount);
 
     if (!response.status) {
       return res.status(400).json({
