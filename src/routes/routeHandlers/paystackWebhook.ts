@@ -11,6 +11,7 @@ export const webhookHandler: RequestHandler = async (req, res) => {
     // console.log(event);
     try {
       const response = await fundAccService(event);
+      console.log(event);
       console.log(response);
     } catch (error) {
       console.log(error);

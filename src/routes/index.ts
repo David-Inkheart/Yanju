@@ -4,7 +4,7 @@ import express from 'express';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 import { getHomeHandler } from './routeHandlers/home';
-import { fundAccountHandler, getTransactionsHandler, transferTransactionHandler } from './routeHandlers/transaction';
+import { fundAccountHandler, getTransactionsHandler, transferTransactionHandler, verifyTransHandler } from './routeHandlers/transaction';
 import { webhookHandler } from './routeHandlers/paystackWebhook';
 
 // instatiate router
@@ -17,6 +17,7 @@ router.post('/auth/reset-password', resetPasswordHandler);
 router.post('/auth/reset-password/confirm', confirmResetPasswordHandler);
 
 router.post('/paystack-webhook', webhookHandler);
+router.get('/verify-transaction', verifyTransHandler);
 
 // use auth middleware to protect the routes below
 router.use(authMiddleware);

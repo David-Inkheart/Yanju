@@ -12,11 +12,15 @@ const config = {
   },
 };
 
-const baseUrl = `${process.env.PAYSTACK_BASE_URL}/transaction/initialize`;
-
-const reference = uuid();
+const baseUrl = `${process.env.PAYSTACK_BASE_URL}`;
 
 export const initPay = async (data: fundingParams) => {
-  const response = await axios.post(baseUrl, { reference, ...data }, config);
+  const reference = uuid();
+  const response = await axios.post(`${baseUrl}/transaction/initialize`, { reference, ...data }, config);
+  return response.data;
+};
+
+export const verifyPay = async (reference: string) => {
+  const response = await axios.get(`${baseUrl}/transaction/verify/${reference}`, config);
   return response.data;
 };
