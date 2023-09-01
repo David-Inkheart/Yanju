@@ -4,7 +4,13 @@ import express from 'express';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 import { getHomeHandler } from './routeHandlers/home';
-import { fundAccountHandler, getTransactionsHandler, transferTransactionHandler, verifyTransHandler } from './routeHandlers/transaction';
+import {
+  fundAccountHandler,
+  getTransactionsHandler,
+  transferTransactionHandler,
+  verifyTransHandler,
+  withdrawalHandler,
+} from './routeHandlers/transaction';
 import { webhookHandler } from './routeHandlers/paystackWebhook';
 
 // instatiate router
@@ -25,5 +31,6 @@ router.post('/auth/change-password', changePasswordHandler);
 router.post('/transfer/:recipientId', transferTransactionHandler);
 router.get('/transactions', getTransactionsHandler);
 router.post('/fund', fundAccountHandler);
+router.post('/withdraw', withdrawalHandler);
 
 export default router;

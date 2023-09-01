@@ -1,6 +1,7 @@
 import { RequestHandler } from 'express';
 import hashedAuth from '../../services/paystack/authHash';
-import fundAccService from '../../utils/transactions/fundAccService';
+import fundAccount from '../../utils/transactions/fundAccService';
+import withdrawfromAccount from '../../utils/transactions/withdrawalService';
 
 export const webhookHandler: RequestHandler = async (req, res) => {
   const hash = hashedAuth(req.body);
@@ -10,8 +11,13 @@ export const webhookHandler: RequestHandler = async (req, res) => {
     // do something with event
     // console.log(event);
     try {
-      const response = await fundAccService(event);
-      console.log(event);
+      let response;
+      if (event.event === 'charge.success') {
+        response = await fundAccount(event);
+      }
+      if (event.event === 'transfer.success') {
+        response = await withdrawfromAccount(event);
+      }
       console.log(response);
     } catch (error) {
       console.log(error);

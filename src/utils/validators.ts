@@ -41,6 +41,12 @@ const fundSchema = joi.object({
   userId: idSchema,
 });
 
+const withdrawSchema = joi.object({
+  amount: joi.number().integer().min(100).required(),
+  narration: joi.string().required(),
+  userId: idSchema,
+});
+
 const transactionHistorySchema = joi
   .object({
     limit: joi.number().integer().min(1),
@@ -69,4 +75,5 @@ export {
   transactionHistorySchema,
   fundSchema,
   verifyPaySchema,
+  withdrawSchema,
 };

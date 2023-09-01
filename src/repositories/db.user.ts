@@ -7,6 +7,10 @@ export const findUser = (data: Prisma.UserWhereUniqueInput) => {
   return prisma.user.findUnique({ where: data });
 };
 
+export const findUserByNames = (data: Prisma.UserWhereInput) => {
+  return prisma.user.findFirst({ where: data });
+};
+
 export const findUserWithOptionalTxn = (data: Prisma.UserWhereUniqueInput, txn?: PrismaTransaction) => {
   return txn ? txn.user.findUnique({ where: data }) : prisma.user.findUnique({ where: data });
 };

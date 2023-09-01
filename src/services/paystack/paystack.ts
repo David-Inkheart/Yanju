@@ -24,3 +24,46 @@ export const verifyPay = async (reference: string) => {
   const response = await axios.get(`${baseUrl}/transaction/verify/${reference}`, config);
   return response.data;
 };
+
+export const listBanks = async () => {
+  const response = await axios.get(`${baseUrl}/bank`, config);
+  return response.data;
+};
+
+export const transferRecipient = async ({ name, bankCode, accountNumber }: { bankCode: string; name: string; accountNumber: string }) => {
+  const data = {
+    type: 'nuban',
+    name,
+    account_number: accountNumber,
+    bank_code: bankCode,
+    currency: 'NGN',
+  };
+  const response = await axios.post(`${baseUrl}/transferrecipient`, data, config);
+  return response.data;
+};
+
+export const transferInit = async ({ amount, recipient, reason }: { amount: number; recipient: string; reason: string }) => {
+  const reference = uuid();
+  const data = {
+    source: 'balance',
+    amount,
+    recipient,
+    reason,
+    reference,
+  };
+  const response = await axios.post(`${baseUrl}/transfer`, data, config);
+  return response.data;
+};
+
+export const transferFinalize = async (transferCode: string) => {
+  const data = {
+    transferCode,
+  };
+  const response = await axios.post(`${baseUrl}/transfer/finalize_transfer`, data, config);
+  return response.data;
+};
+
+export const transferStatus = async (transferCode: string) => {
+  const response = await axios.get(`${baseUrl}/transfer/${transferCode}`, config);
+  return response.data;
+};

@@ -1,12 +1,16 @@
-import { fundSchema, transactionHistorySchema, transferMoneySchema } from '../utils/validators';
+import { configDotenv } from 'dotenv';
+
+import { fundSchema, transactionHistorySchema, transferMoneySchema, withdrawSchema } from '../utils/validators';
 import transfer from '../utils/transactions/transferService';
 import { getTransactions } from '../repositories/db.transaction';
 import hashArguments from '../utils/hash';
 import isDuplicateTxn from '../utils/transactions/checkTransaction';
 import { findAccountbyUserId } from '../repositories/db.account';
 import { findUser } from '../repositories/db.user';
-import { initPay } from '../services/paystack/paystack';
+import { initPay, listBanks, transferRecipient, transferInit, transferFinalize } from '../services/paystack/paystack';
 import { TransferParams } from '../types/custom';
+
+configDotenv();
 
 class TransactionController {
   static async transferMoney({ amount, recipientId, senderId }: TransferParams) {
@@ -90,6 +94,37 @@ class TransactionController {
 
     const result = await initPay({ email: user!.email, amount, metadata: {} });
 
+    return result;
+  }
+
+  static async withdrawalInit(userId: number, amount: number, narration: string) {
+    const { error } = withdrawSchema.validate({ amount, userId, narration });
+
+    if (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+
+    const user = await findUser({ id: userId });
+
+    // "slug": "fidelity-bank",
+    // "code": "070",
+    // "longcode": "070150003",
+    const banks = await listBanks(); // list of banks in Nigeria from paystack
+    const userBank = banks.data.find((bank: any) => bank.slug === 'fidelity-bank');
+    const name = `${user!.firstName} ${user!.lastName}`;
+    // const account = await findAccountbyUserId(userId);
+    const createPuser = await transferRecipient({ name, bankCode: userBank.code, accountNumber: process.env.ACCOUNT_NO as string });
+    const recipientCode = createPuser.data.recipient_code;
+
+    const response = await transferInit({ amount, recipient: recipientCode, reason: narration });
+
+    const { transfer_code } = response.data;
+
+    const result = await transferFinalize(transfer_code);
+    console.log(result);
     return result;
   }
 }

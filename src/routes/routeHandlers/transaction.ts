@@ -130,10 +130,40 @@ export const verifyTransHandler: RequestHandler = async (req, res) => {
       message: response.message,
       data: response.data,
     });
-  } catch (err) {
+  } catch (err: any) {
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
+      // error: err.message,
+    });
+  }
+};
+
+export const withdrawalHandler: RequestHandler = async (req, res) => {
+  try {
+    const { amount, narration } = req.body;
+    const userId = req.userId as UserId;
+
+    const response = await TransactionController.withdrawalInit(userId, amount, narration);
+
+    if (!response.status) {
+      return res.status(400).json({
+        success: response.status,
+        message: response.message,
+      });
+    }
+
+    return res.json({
+      success: response.status,
+      message: response.message,
+      data: response.data,
+    });
+  } catch (err: any) {
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: 'internal server error',
+      error: err.message,
     });
   }
 };
