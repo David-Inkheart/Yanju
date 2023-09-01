@@ -1,13 +1,20 @@
 import { RequestHandler } from 'express';
 import hashedAuth from '../../services/paystack/authHash';
+import fundAccService from '../../utils/transactions/fundAccService';
 
 export const webhookHandler: RequestHandler = async (req, res) => {
   const hash = hashedAuth(req.body);
   if (hash === req.headers['x-paystack-signature']) {
-    // Retrieve the request's body
+    // get event from request body
     const event = req.body;
-    // Do something with event
-    console.log(event);
+    // do something with event
+    // console.log(event);
+    try {
+      const response = await fundAccService(event);
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+    }
   }
   res.sendStatus(200);
 };
