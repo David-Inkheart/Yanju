@@ -112,3 +112,7 @@ export const getTransactions = async ({
     transactions,
   };
 };
+
+export const findTransaction = async (data: Prisma.TransactionWhereInput) => {
+  return prisma.transaction.findFirst({ where: data });
+};

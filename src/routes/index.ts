@@ -5,8 +5,10 @@ import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 import { getHomeHandler } from './routeHandlers/home';
 import {
+  deleteRecipientHandler,
   fundAccountHandler,
   getTransactionsHandler,
+  listBanksHandler,
   transferTransactionHandler,
   verifyTransHandler,
   withdrawalHandler,
@@ -24,6 +26,8 @@ router.post('/auth/reset-password/confirm', confirmResetPasswordHandler);
 
 router.post('/paystack-webhook', webhookHandler);
 router.get('/verify-transaction', verifyTransHandler);
+router.delete('/delete-recipient', deleteRecipientHandler);
+router.get('/banks', listBanksHandler);
 
 // use auth middleware to protect the routes below
 router.use(authMiddleware);

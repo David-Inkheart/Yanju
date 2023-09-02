@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import hashedAuth from '../../services/paystack/authHash';
 import fundAccount from '../../utils/transactions/fundAccService';
-import withdrawfromAccount from '../../utils/transactions/withdrawalService';
+import { withdrawfromAccount } from '../../utils/transactions/withdrawalService';
 
 export const webhookHandler: RequestHandler = async (req, res) => {
   const hash = hashedAuth(req.body);

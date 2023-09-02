@@ -11,6 +11,14 @@ export const findUserByNames = (data: Prisma.UserWhereInput) => {
   return prisma.user.findFirst({ where: data });
 };
 
+export const findBankDetails = (data: Prisma.BankDetailsWhereInput) => {
+  return prisma.bankDetails.findFirst({ where: data });
+};
+
+export const saveBankDetails = (data: Prisma.BankDetailsCreateInput) => {
+  return prisma.bankDetails.create({ data });
+};
+
 export const findUserWithOptionalTxn = (data: Prisma.UserWhereUniqueInput, txn?: PrismaTransaction) => {
   return txn ? txn.user.findUnique({ where: data }) : prisma.user.findUnique({ where: data });
 };

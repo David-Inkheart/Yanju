@@ -30,20 +30,47 @@ export const listBanks = async () => {
   return response.data;
 };
 
-export const transferRecipient = async ({ name, bankCode, accountNumber }: { bankCode: string; name: string; accountNumber: string }) => {
+export const createTransferRecipient = async ({
+  name,
+  bankCode,
+  accountNumber,
+  senderId,
+}: {
+  bankCode: string;
+  name: string;
+  accountNumber: string;
+  senderId: number;
+}) => {
   const data = {
     type: 'nuban',
     name,
     account_number: accountNumber,
     bank_code: bankCode,
     currency: 'NGN',
+    metadata: {
+      senderId,
+    },
   };
   const response = await axios.post(`${baseUrl}/transferrecipient`, data, config);
   return response.data;
 };
 
-export const transferInit = async ({ amount, recipient, reason }: { amount: number; recipient: string; reason: string }) => {
-  const reference = uuid();
+export const deleteTransferRecipient = async (recipientCode: string) => {
+  const response = await axios.delete(`${baseUrl}/transferrecipient/${recipientCode}`, config);
+  return response.data;
+};
+
+export const transferInit = async ({
+  amount,
+  recipient,
+  reference,
+  reason,
+}: {
+  amount: number;
+  recipient: string;
+  reference: string;
+  reason: string;
+}) => {
   const data = {
     source: 'balance',
     amount,
@@ -65,5 +92,10 @@ export const transferFinalize = async (transferCode: string) => {
 
 export const transferStatus = async (transferCode: string) => {
   const response = await axios.get(`${baseUrl}/transfer/${transferCode}`, config);
+  return response.data;
+};
+
+export const resolveAccount = async (accountNumber: string, bankCode: string) => {
+  const response = await axios.get(`${baseUrl}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, config);
   return response.data;
 };

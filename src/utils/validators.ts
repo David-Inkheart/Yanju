@@ -42,7 +42,9 @@ const fundSchema = joi.object({
 });
 
 const withdrawSchema = joi.object({
-  amount: joi.number().integer().min(100).required(),
+  accountNumber: joi.number().integer().min(10).required(),
+  bankCode: joi.number().integer().min(3).required(),
+  amount: joi.number().integer().min(10000).required(),
   narration: joi.string().required(),
   userId: idSchema,
 });
@@ -64,6 +66,11 @@ const verifyPaySchema = joi.object({
   reference: joi.string().uuid().required(),
 });
 
+const deleteRecipientSchema = joi.object({
+  // RCP_2x5j67tnnw1t98k
+  recipientCode: joi.string().min(19).max(20).required(),
+});
+
 export {
   loginSchema,
   registerSchema,
@@ -76,4 +83,5 @@ export {
   fundSchema,
   verifyPaySchema,
   withdrawSchema,
+  deleteRecipientSchema,
 };

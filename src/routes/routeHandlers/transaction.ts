@@ -2,8 +2,8 @@ import { RequestHandler } from 'express';
 import { UserId } from '../../types/custom';
 import TransactionController from '../../controllers/TransactionController';
 import paginate from '../../utils/pagination';
-import { verifyPay } from '../../services/paystack/paystack';
-import { verifyPaySchema } from '../../utils/validators';
+import { deleteTransferRecipient, listBanks, verifyPay } from '../../services/paystack/paystack';
+import { deleteRecipientSchema, verifyPaySchema } from '../../utils/validators';
 
 export const transferTransactionHandler: RequestHandler = async (req, res) => {
   try {
@@ -131,27 +131,90 @@ export const verifyTransHandler: RequestHandler = async (req, res) => {
       data: response.data,
     });
   } catch (err: any) {
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      // error: err.message,
+    return res.status(400).json({
+      success: err.code,
+      message: err.message,
+    });
+  }
+};
+
+export const deleteRecipientHandler: RequestHandler = async (req, res) => {
+  try {
+    const { recipientCode } = req.query;
+
+    const { error } = deleteRecipientSchema.validate({ recipientCode });
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    const response = await deleteTransferRecipient(recipientCode as string);
+
+    return res.json({
+      success: response.status,
+      message: response.message,
+    });
+  } catch (err: any) {
+    return res.status(400).json({
+      success: err.code,
+      message: err.message,
     });
   }
 };
 
 export const withdrawalHandler: RequestHandler = async (req, res) => {
   try {
-    const { amount, narration } = req.body;
+    const { accountNumber, bankCode, amount, narration } = req.body;
     const userId = req.userId as UserId;
 
-    const response = await TransactionController.withdrawalInit(userId, amount, narration);
+    const response = await TransactionController.withdrawalInit({
+      userId,
+      accountNumber,
+      bankCode,
+      amount,
+      narration,
+    });
 
-    if (!response.status) {
+    if (response.status >= 400 && response.status <= 499) {
+      return res.status(response.status).json({
+        success: false,
+        message: 'Bad request: you probably sent an invalid request',
+      });
+    }
+
+    if (response.status >= 500 && response.status <= 599) {
+      return res.status(response.status).json({
+        success: false,
+        message: 'Internal server error: please try again later',
+      });
+    }
+
+    if (!response.success) {
       return res.status(400).json({
-        success: response.status,
+        success: response.success,
         message: response.message,
       });
     }
+
+    return res.json({
+      success: response.success,
+      message: response.message,
+      data: response.data,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: 'internal server error',
+    });
+  }
+};
+
+export const listBanksHandler: RequestHandler = async (req, res) => {
+  try {
+    const response = await listBanks();
 
     return res.json({
       success: response.status,
@@ -159,11 +222,9 @@ export const withdrawalHandler: RequestHandler = async (req, res) => {
       data: response.data,
     });
   } catch (err: any) {
-    console.log(err);
     return res.status(500).json({
       success: false,
       message: 'internal server error',
-      error: err.message,
     });
   }
 };

@@ -50,6 +50,16 @@ model TransactionSubType {
   Transaction Transaction[]
 }
 
+model BankDetails {
+  id             Int      @id @default(autoincrement())
+  account_name   String
+  account_number String   @unique
+  bank_code      String
+  recipient_code String   @unique
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+}
+
 enum TransactionType {
   DEBIT
   CREDIT

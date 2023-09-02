@@ -1,4 +1,5 @@
 import { configDotenv } from 'dotenv';
+import { v4 as uuid } from 'uuid';
 
 import { fundSchema, transactionHistorySchema, transferMoneySchema, withdrawSchema } from '../utils/validators';
 import transfer from '../utils/transactions/transferService';
@@ -6,9 +7,10 @@ import { getTransactions } from '../repositories/db.transaction';
 import hashArguments from '../utils/hash';
 import isDuplicateTxn from '../utils/transactions/checkTransaction';
 import { findAccountbyUserId } from '../repositories/db.account';
-import { findUser } from '../repositories/db.user';
-import { initPay, listBanks, transferRecipient, transferInit, transferFinalize } from '../services/paystack/paystack';
+import { findBankDetails, findUser, saveBankDetails } from '../repositories/db.user';
+import { initPay, createTransferRecipient, transferInit, resolveAccount } from '../services/paystack/paystack';
 import { TransferParams } from '../types/custom';
+import { debitUserAccount } from '../utils/transactions/withdrawalService';
 
 configDotenv();
 
@@ -97,8 +99,20 @@ class TransactionController {
     return result;
   }
 
-  static async withdrawalInit(userId: number, amount: number, narration: string) {
-    const { error } = withdrawSchema.validate({ amount, userId, narration });
+  static async withdrawalInit({
+    userId,
+    accountNumber,
+    bankCode,
+    amount,
+    narration,
+  }: {
+    userId: number;
+    accountNumber: string;
+    bankCode: string;
+    amount: number;
+    narration: string;
+  }) {
+    const { error } = withdrawSchema.validate({ amount, userId, narration, accountNumber, bankCode });
 
     if (error) {
       return {
@@ -107,25 +121,56 @@ class TransactionController {
       };
     }
 
-    const user = await findUser({ id: userId });
+    const reference = uuid();
 
-    // "slug": "fidelity-bank",
-    // "code": "070",
-    // "longcode": "070150003",
-    const banks = await listBanks(); // list of banks in Nigeria from paystack
-    const userBank = banks.data.find((bank: any) => bank.slug === 'fidelity-bank');
-    const name = `${user!.firstName} ${user!.lastName}`;
-    // const account = await findAccountbyUserId(userId);
-    const createPuser = await transferRecipient({ name, bankCode: userBank.code, accountNumber: process.env.ACCOUNT_NO as string });
-    const recipientCode = createPuser.data.recipient_code;
+    let recipientDetails;
 
-    const response = await transferInit({ amount, recipient: recipientCode, reason: narration });
+    try {
+      // Attempt to validate bank details from the database
+      recipientDetails = await findBankDetails({ account_number: accountNumber, bank_code: bankCode });
 
-    const { transfer_code } = response.data;
+      if (!recipientDetails) {
+        // If not found in db, attempt to validate/get from Paystack
+        recipientDetails = await resolveAccount(accountNumber, bankCode);
+      }
 
-    const result = await transferFinalize(transfer_code);
-    console.log(result);
-    return result;
+      const debitResult = await debitUserAccount({ amount, userId, reference, reason: narration });
+
+      if (!debitResult.success) {
+        throw new Error('Could not withdraw from the account');
+      }
+
+      // will come from either the database or paystack
+      const account_name = recipientDetails.account_name || recipientDetails.data.account_name;
+
+      const transferRecipient = await createTransferRecipient({ name: account_name, bankCode, accountNumber, senderId: userId });
+
+      const { recipient_code } = transferRecipient.data;
+
+      // Save the bank details to the database if it didn't exist
+      if (!recipientDetails.account_name) {
+        await saveBankDetails({
+          account_name,
+          account_number: accountNumber,
+          bank_code: bankCode,
+          recipient_code,
+        });
+      }
+
+      const transferResult = await transferInit({ amount, recipient: recipient_code, reference, reason: narration });
+
+      return {
+        success: true,
+        message: 'Withdrawal initiated successfully',
+        data: transferResult.data,
+      };
+    } catch (err: any) {
+      return {
+        status: err.response.status,
+        success: false,
+        message: err.message,
+      };
+    }
   }
 }
 
