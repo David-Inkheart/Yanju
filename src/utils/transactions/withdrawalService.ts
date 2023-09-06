@@ -11,7 +11,7 @@ export async function withdrawfromAccount(event: any) {
 
   if (!transaction) {
     /**
-     * TODO:
+     * // TODO:
      * - Check the new table with reference and use it to get account id
      * - Debit account & record transaction
      */
