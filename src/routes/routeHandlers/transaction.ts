@@ -178,32 +178,12 @@ export const withdrawalHandler: RequestHandler = async (req, res) => {
       narration,
     });
 
-    if (response.status >= 400 && response.status <= 499) {
-      return res.status(response.status).json({
-        success: false,
-        message: 'Bad request: you probably sent an invalid request',
-      });
-    }
-
-    if (response.status >= 500 && response.status <= 599) {
-      return res.status(response.status).json({
-        success: false,
-        message: 'Internal server error: please try again later',
-      });
-    }
-
     if (!response.success) {
-      return res.status(400).json({
-        success: response.success,
-        message: response.message,
-      });
+      return res.status(400).json(response);
     }
 
-    return res.json({
-      success: response.success,
-      message: response.message,
-      data: response.data,
-    });
+    return !response.success ? res.status(400).json(response) : res.json(response);
+    // return res.json(response);
   } catch (err: any) {
     return res.status(500).json({
       success: false,

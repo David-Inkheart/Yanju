@@ -4,25 +4,17 @@ import prisma from '../db.server';
 import { transferStatus } from '../../services/paystack/paystack';
 
 export async function withdrawfromAccount(event: any) {
-  const { amount, reference, status, reason, transfer_code } = event.data;
-  if (status !== 'success') throw new Error('withdrawal not successful');
+  const { amount, reference, reason, transfer_code } = event.data;
 
   // check if reference exists in db
   const transaction = await findTransaction({ reference });
 
   if (!transaction) {
-    // if it doesn't exits, use transfer code to confirm transfer and get details
-    const transferDetails = await transferStatus(transfer_code);
-
-    // get senderId from metadata (appended to transfer recipient when created)
-    const userId = transferDetails.recipient.metadata.senderId;
-    console.log('senderId: ', userId);
-
-    const userAccount = await findAccountbyUserId(userId);
-
-    if (!userAccount) throw new Error('Account not found');
-
-    const userBalance = Number(userAccount[0].balance);
+    /**
+     * TODO:
+     * - Check the new table with reference and use it to get account id
+     * - Debit account & record transaction
+     */
 
     const subType = await getSubType('WITHDRAWAL');
 
@@ -46,6 +38,7 @@ export async function withdrawfromAccount(event: any) {
       );
     });
   }
+
   return {
     success: true,
     message: 'withdrawal successful',
@@ -56,10 +49,7 @@ export async function debitUserAccount({ amount, userId, reference, reason }: { 
   const userAccount = await findAccountbyUserId(userId);
 
   if (!userAccount) {
-    return {
-      success: false,
-      message: 'Account not found',
-    };
+    throw new Error('Account not found');
   }
 
   const userBalance = Number(userAccount[0].balance);
@@ -85,6 +75,7 @@ export async function debitUserAccount({ amount, userId, reference, reason }: { 
       tx,
     );
   });
+
   return {
     success: true,
     message: 'withdrawal successful',

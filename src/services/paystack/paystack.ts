@@ -14,10 +14,25 @@ const config = {
 
 const baseUrl = `${process.env.PAYSTACK_BASE_URL}`;
 
+const PaystackClient = axios.create({ baseURL: baseUrl, headers: config.headers });
+
+PaystackClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    // TODO: send internal notification
+    if (error.response.status >= 400 && error.response.status <= 499) {
+      return {
+        success: false,
+        message: 'Bad request: you probably sent an invalid request',
+      };
+    }
+    throw new Error('Internal server error');
+  },
+);
+
 export const initPay = async (data: fundingParams) => {
   const reference = uuid();
-  const response = await axios.post(`${baseUrl}/transaction/initialize`, { reference, ...data }, config);
-  return response.data;
+  return PaystackClient.post('/transaction/initialize', { reference, ...data });
 };
 
 export const verifyPay = async (reference: string) => {
@@ -78,8 +93,7 @@ export const transferInit = async ({
     reason,
     reference,
   };
-  const response = await axios.post(`${baseUrl}/transfer`, data, config);
-  return response.data;
+  return PaystackClient.post(`/transfer`, data);
 };
 
 export const transferFinalize = async (transferCode: string) => {

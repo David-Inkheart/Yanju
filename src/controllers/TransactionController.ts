@@ -123,54 +123,31 @@ class TransactionController {
 
     const reference = uuid();
 
-    let recipientDetails;
+    let recipientCode: string | undefined;
 
-    try {
-      // Attempt to validate bank details from the database
-      recipientDetails = await findBankDetails({ account_number: accountNumber, bank_code: bankCode });
+    const savedBankDetails = await findBankDetails({ account_number: accountNumber, bank_code: bankCode });
 
-      if (!recipientDetails) {
-        // If not found in db, attempt to validate/get from Paystack
-        recipientDetails = await resolveAccount(accountNumber, bankCode);
-      }
-
-      const debitResult = await debitUserAccount({ amount, userId, reference, reason: narration });
-
-      if (!debitResult.success) {
-        throw new Error('Could not withdraw from the account');
-      }
-
-      // will come from either the database or paystack
-      const account_name = recipientDetails.account_name || recipientDetails.data.account_name;
-
-      const transferRecipient = await createTransferRecipient({ name: account_name, bankCode, accountNumber, senderId: userId });
-
-      const { recipient_code } = transferRecipient.data;
-
-      // Save the bank details to the database if it didn't exist
-      if (!recipientDetails.account_name) {
-        await saveBankDetails({
-          account_name,
-          account_number: accountNumber,
-          bank_code: bankCode,
-          recipient_code,
-        });
-      }
-
-      const transferResult = await transferInit({ amount, recipient: recipient_code, reference, reason: narration });
-
-      return {
-        success: true,
-        message: 'Withdrawal initiated successfully',
-        data: transferResult.data,
-      };
-    } catch (err: any) {
-      return {
-        status: err.response.status,
-        success: false,
-        message: err.message,
-      };
+    if (savedBankDetails) {
+      recipientCode = savedBankDetails.recipient_code;
+    } else {
+      const resolvedAccountDetails = await resolveAccount(accountNumber, bankCode);
+      const transferRecipientResult = await createTransferRecipient({
+        name: resolvedAccountDetails.data.account_name,
+        bankCode,
+        accountNumber,
+        senderId: userId,
+      });
+      recipientCode = transferRecipientResult.recipient_code;
     }
+
+    // write to transfer attempts table (all existing details plus acct_id, ref & rec_code)
+    await debitUserAccount({ amount, userId, reference, reason: narration });
+    await transferInit({ amount, recipient: recipientCode!, reference, reason: narration });
+
+    return {
+      success: true,
+      message: 'Withdrawal initiated successfully',
+    };
   }
 }
 
