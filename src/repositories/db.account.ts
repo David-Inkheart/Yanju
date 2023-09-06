@@ -9,6 +9,10 @@ export const createAccount = (userId: number) => {
   });
 };
 
+export const findAccount = (data: Prisma.AccountWhereInput) => {
+  return prisma.account.findFirst({ where: data });
+};
+
 export const findAccountbyUserId = (userId: number, txn?: Prisma.TransactionClient) => {
   return txn
     ? txn.$queryRaw<Account[]>(Prisma.sql`SELECT * FROM "public"."Account" WHERE "userId" = ${userId} FOR UPDATE;`)

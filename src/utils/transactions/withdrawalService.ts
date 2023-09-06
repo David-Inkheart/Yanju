@@ -1,35 +1,28 @@
-import { debitAccount, findAccountbyUserId, getSubType } from '../../repositories/db.account';
+import { debitAccount, findAccount, getSubType } from '../../repositories/db.account';
 import { findTransaction, recordTransaction } from '../../repositories/db.transaction';
 import prisma from '../db.server';
-import { transferStatus } from '../../services/paystack/paystack';
+import { getTransferDetails } from '../../repositories/db.user';
 
 export async function withdrawfromAccount(event: any) {
-  const { amount, reference, status, reason, transfer_code } = event.data;
+  const { amount, reference, status, reason } = event.data;
   if (status !== 'success') throw new Error('withdrawal not successful');
 
-  // check if reference exists in db
   const transaction = await findTransaction({ reference });
 
   if (!transaction) {
-    // if it doesn't exits, use transfer code to confirm transfer and get details
-    const transferDetails = await transferStatus(transfer_code);
+    // check if transfer attempt with reference exists in db
+    const savedTransferDetails = await getTransferDetails({ reference });
 
-    // get senderId from metadata (appended to transfer recipient when created)
-    const userId = transferDetails.recipient.metadata.senderId;
-    console.log('senderId: ', userId);
+    const userAccount = await findAccount({ id: savedTransferDetails?.sender_acc_id });
 
-    const userAccount = await findAccountbyUserId(userId);
-
-    if (!userAccount) throw new Error('Account not found');
-
-    const userBalance = Number(userAccount[0].balance);
+    const userBalance = Number(userAccount!.balance);
 
     const subType = await getSubType('WITHDRAWAL');
 
     if (!subType) throw new Error('Could not find subtype');
 
     await prisma.$transaction(async (tx) => {
-      const { balance: UserUpdatedBalance } = await debitAccount({ amount, accountId: userAccount[0].id, txn: tx });
+      const { balance: UserUpdatedBalance } = await debitAccount({ amount, accountId: userAccount!.id, txn: tx });
 
       await recordTransaction(
         {
@@ -39,7 +32,7 @@ export async function withdrawfromAccount(event: any) {
           type: 'DEBIT',
           reference,
           subTypeId: subType!.id,
-          accountId: userAccount[0].id,
+          accountId: userAccount!.id,
           metadata: { reason },
         },
         tx,
@@ -52,34 +45,35 @@ export async function withdrawfromAccount(event: any) {
   };
 }
 
-export async function debitUserAccount({ amount, userId, reference, reason }: { amount: number; userId: number; reference: string; reason: string }) {
-  const userAccount = await findAccountbyUserId(userId);
-
-  if (!userAccount) {
-    return {
-      success: false,
-      message: 'Account not found',
-    };
-  }
-
-  const userBalance = Number(userAccount[0].balance);
-
+export async function debitUserAccount({
+  amount,
+  accountId,
+  accountBalance,
+  reference,
+  reason,
+}: {
+  amount: number;
+  accountId: number;
+  accountBalance: number;
+  reference: string;
+  reason: string;
+}) {
   const subType = await getSubType('WITHDRAWAL');
 
   if (!subType) throw new Error('Could not find subtype');
 
   await prisma.$transaction(async (tx) => {
-    const { balance: UserUpdatedBalance } = await debitAccount({ amount, accountId: userAccount[0].id, txn: tx });
+    const { balance: AccountUpdatedBalance } = await debitAccount({ amount, accountId, txn: tx });
 
     await recordTransaction(
       {
         amount,
-        balanceAfter: Number(UserUpdatedBalance),
-        balanceBefore: userBalance,
+        balanceAfter: Number(AccountUpdatedBalance),
+        balanceBefore: accountBalance,
         type: 'DEBIT',
         reference,
         subTypeId: subType!.id,
-        accountId: userAccount[0].id,
+        accountId,
         metadata: { reason },
       },
       tx,

@@ -50,12 +50,14 @@ model TransactionSubType {
   Transaction Transaction[]
 }
 
-model BankDetails {
+model TransferAttempt {
   id             Int      @id @default(autoincrement())
+  sender_acc_id  Int
   account_name   String
-  account_number String   @unique
+  account_number String
   bank_code      String
-  recipient_code String   @unique
+  recipient_code String
+  reference      String   @unique
   createdAt      DateTime @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @db.Timestamptz(3)
 }

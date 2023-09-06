@@ -18,6 +18,9 @@ export const webhookHandler: RequestHandler = async (req, res) => {
       if (event.event === 'transfer.success') {
         response = await withdrawfromAccount(event);
       }
+      if (event.event === 'transfer.failed') {
+        response = 'transfer failed, please try again';
+      }
       console.log(response);
     } catch (error) {
       console.log(error);

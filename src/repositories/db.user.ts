@@ -7,16 +7,12 @@ export const findUser = (data: Prisma.UserWhereUniqueInput) => {
   return prisma.user.findUnique({ where: data });
 };
 
-export const findUserByNames = (data: Prisma.UserWhereInput) => {
-  return prisma.user.findFirst({ where: data });
+export const getTransferDetails = (data: Prisma.TransferAttemptWhereInput) => {
+  return prisma.transferAttempt.findFirst({ where: data });
 };
 
-export const findBankDetails = (data: Prisma.BankDetailsWhereInput) => {
-  return prisma.bankDetails.findFirst({ where: data });
-};
-
-export const saveBankDetails = (data: Prisma.BankDetailsCreateInput) => {
-  return prisma.bankDetails.create({ data });
+export const saveTransferDetails = (data: Prisma.TransferAttemptCreateInput) => {
+  return prisma.transferAttempt.create({ data });
 };
 
 export const findUserWithOptionalTxn = (data: Prisma.UserWhereUniqueInput, txn?: PrismaTransaction) => {

@@ -7,7 +7,7 @@ import { getTransactions } from '../repositories/db.transaction';
 import hashArguments from '../utils/hash';
 import isDuplicateTxn from '../utils/transactions/checkTransaction';
 import { findAccountbyUserId } from '../repositories/db.account';
-import { findBankDetails, findUser, saveBankDetails } from '../repositories/db.user';
+import { findUser, getTransferDetails, saveTransferDetails } from '../repositories/db.user';
 import { initPay, createTransferRecipient, transferInit, resolveAccount } from '../services/paystack/paystack';
 import { TransferParams } from '../types/custom';
 import { debitUserAccount } from '../utils/transactions/withdrawalService';
@@ -122,55 +122,57 @@ class TransactionController {
     }
 
     const reference = uuid();
+    const senderAccount = await findAccountbyUserId(userId);
 
-    let recipientDetails;
+    let recipientCode: string | undefined;
+    let accountName: string | undefined;
 
-    try {
-      // Attempt to validate bank details from the database
-      recipientDetails = await findBankDetails({ account_number: accountNumber, bank_code: bankCode });
+    const savedTransferDetails = await getTransferDetails({ account_number: accountNumber, bank_code: bankCode });
 
-      if (!recipientDetails) {
-        // If not found in db, attempt to validate/get from Paystack
-        recipientDetails = await resolveAccount(accountNumber, bankCode);
-      }
+    if (savedTransferDetails) {
+      recipientCode = savedTransferDetails.recipient_code;
+      accountName = savedTransferDetails.account_name;
+      // console.log('Transfer recipient from db: ', savedTransferDetails);
+    } else {
+      const resolvedAccountDetails = await resolveAccount(accountNumber, bankCode);
 
-      const debitResult = await debitUserAccount({ amount, userId, reference, reason: narration });
+      accountName = resolvedAccountDetails.data.account_name;
 
-      if (!debitResult.success) {
-        throw new Error('Could not withdraw from the account');
-      }
+      // console.log('Resolved account details: ', resolvedAccountDetails.data);
 
-      // will come from either the database or paystack
-      const account_name = recipientDetails.account_name || recipientDetails.data.account_name;
+      const transferRecipientResult = await createTransferRecipient({
+        name: accountName!,
+        bankCode,
+        accountNumber,
+      });
 
-      const transferRecipient = await createTransferRecipient({ name: account_name, bankCode, accountNumber, senderId: userId });
+      recipientCode = transferRecipientResult.data.recipient_code;
 
-      const { recipient_code } = transferRecipient.data;
-
-      // Save the bank details to the database if it didn't exist
-      if (!recipientDetails.account_name) {
-        await saveBankDetails({
-          account_name,
-          account_number: accountNumber,
-          bank_code: bankCode,
-          recipient_code,
-        });
-      }
-
-      const transferResult = await transferInit({ amount, recipient: recipient_code, reference, reason: narration });
-
-      return {
-        success: true,
-        message: 'Withdrawal initiated successfully',
-        data: transferResult.data,
-      };
-    } catch (err: any) {
-      return {
-        status: err.response.status,
-        success: false,
-        message: err.message,
-      };
+      // console.log('Transfer recipient from paystack: ', transferRecipientResult.data);
     }
+
+    await saveTransferDetails({
+      account_name: accountName!,
+      account_number: accountNumber,
+      bank_code: bankCode,
+      recipient_code: recipientCode!,
+      reference,
+      sender_acc_id: senderAccount[0].id,
+    });
+
+    await debitUserAccount({
+      amount,
+      accountId: senderAccount[0].id,
+      accountBalance: Number(senderAccount[0].balance),
+      reference,
+      reason: narration,
+    });
+    await transferInit({ amount, recipient: recipientCode!, reference, reason: narration });
+
+    return {
+      success: true,
+      message: 'Withdrawal initiated successfully',
+    };
   }
 }
 

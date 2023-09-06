@@ -30,26 +30,13 @@ export const listBanks = async () => {
   return response.data;
 };
 
-export const createTransferRecipient = async ({
-  name,
-  bankCode,
-  accountNumber,
-  senderId,
-}: {
-  bankCode: string;
-  name: string;
-  accountNumber: string;
-  senderId: number;
-}) => {
+export const createTransferRecipient = async ({ name, bankCode, accountNumber }: { bankCode: string; name: string; accountNumber: string }) => {
   const data = {
     type: 'nuban',
     name,
     account_number: accountNumber,
     bank_code: bankCode,
     currency: 'NGN',
-    metadata: {
-      senderId,
-    },
   };
   const response = await axios.post(`${baseUrl}/transferrecipient`, data, config);
   return response.data;
