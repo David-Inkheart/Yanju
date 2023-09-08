@@ -12,12 +12,7 @@ async function fundAccount(event: any) {
 
   const userAccount = await findAccountbyUserId(user!.id);
 
-  if (!userAccount) {
-    return {
-      success: false,
-      message: 'Account not found',
-    };
-  }
+  if (!userAccount) throw new Error('account not found');
 
   const userBalance = Number(userAccount[0].balance);
 

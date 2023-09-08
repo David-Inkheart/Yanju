@@ -14,21 +14,30 @@ const config = {
 
 const baseUrl = `${process.env.PAYSTACK_BASE_URL}`;
 
+const paystackClient = axios.create({ baseURL: baseUrl, headers: config.headers });
+
+paystackClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    // TODO: send error notification to slack
+    if (error.response.status >= 400 && error.response.status <= 499) {
+      return {
+        success: false,
+        message: 'Bad request: you probably sent an invalid request',
+      };
+    }
+    throw new Error('Internal server error');
+  },
+);
+
 export const initPay = async (data: fundingParams) => {
   const reference = uuid();
-  const response = await axios.post(`${baseUrl}/transaction/initialize`, { reference, ...data }, config);
-  return response.data;
+  return paystackClient.post('/transaction/initialize', { reference, ...data });
 };
 
-export const verifyPay = async (reference: string) => {
-  const response = await axios.get(`${baseUrl}/transaction/verify/${reference}`, config);
-  return response.data;
-};
+export const verifyPay = async (reference: string) => paystackClient.get(`/transaction/verify/${reference}`);
 
-export const listBanks = async () => {
-  const response = await axios.get(`${baseUrl}/bank`, config);
-  return response.data;
-};
+export const listBanks = async () => paystackClient.get('/bank');
 
 export const createTransferRecipient = async ({ name, bankCode, accountNumber }: { bankCode: string; name: string; accountNumber: string }) => {
   const data = {
@@ -38,14 +47,10 @@ export const createTransferRecipient = async ({ name, bankCode, accountNumber }:
     bank_code: bankCode,
     currency: 'NGN',
   };
-  const response = await axios.post(`${baseUrl}/transferrecipient`, data, config);
-  return response.data;
+  return paystackClient.post('/transferrecipient', data);
 };
 
-export const deleteTransferRecipient = async (recipientCode: string) => {
-  const response = await axios.delete(`${baseUrl}/transferrecipient/${recipientCode}`, config);
-  return response.data;
-};
+export const deleteTransferRecipient = async (recipientCode: string) => paystackClient.delete(`/transferrecipient/${recipientCode}`);
 
 export const transferInit = async ({
   amount,
@@ -65,24 +70,12 @@ export const transferInit = async ({
     reason,
     reference,
   };
-  const response = await axios.post(`${baseUrl}/transfer`, data, config);
-  return response.data;
+  return paystackClient.post('/transfer', data);
 };
 
-export const transferFinalize = async (transferCode: string) => {
-  const data = {
-    transferCode,
-  };
-  const response = await axios.post(`${baseUrl}/transfer/finalize_transfer`, data, config);
-  return response.data;
-};
+// export const transferFinalize = async (transferCode: string) => paystackClient.post('/transfer/finalize_transfer', transferCode);
 
-export const transferStatus = async (transferCode: string) => {
-  const response = await axios.get(`${baseUrl}/transfer/${transferCode}`, config);
-  return response.data;
-};
+export const transferStatus = async (transferCode: string) => paystackClient.get(`/transfer/${transferCode}`);
 
-export const resolveAccount = async (accountNumber: string, bankCode: string) => {
-  const response = await axios.get(`${baseUrl}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, config);
-  return response.data;
-};
+export const resolveAccount = async (accountNumber: string, bankCode: string) =>
+  paystackClient.get(`/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`);
