@@ -92,6 +92,16 @@ class TransactionController {
       };
     }
 
+    const hashedArgs = hashArguments(amount, userId);
+    const isDuplicate = await isDuplicateTxn(userId.toString(), hashedArgs);
+
+    if (isDuplicate) {
+      return {
+        success: false,
+        message: 'Duplicate transaction',
+      };
+    }
+
     const user = await findUser({ id: userId });
 
     const result = await initPay({ email: user!.email, amount, metadata: {} });
@@ -143,6 +153,16 @@ class TransactionController {
       });
 
       recipientCode = transferRecipientResult.data.recipient_code;
+    }
+
+    const hashedArgs = hashArguments(amount, senderAccount[0].id, recipientCode!);
+    const isDuplicate = await isDuplicateTxn(senderAccount[0].id.toString(), hashedArgs);
+
+    if (isDuplicate) {
+      return {
+        success: false,
+        message: 'Duplicate transaction',
+      };
     }
 
     await saveTransferDetails({
