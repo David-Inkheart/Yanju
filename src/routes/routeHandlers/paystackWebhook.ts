@@ -2,6 +2,7 @@ import { RequestHandler } from 'express';
 import hashedAuth from '../../services/paystack/authHash';
 import fundAccount from '../../utils/transactions/fundAccService';
 import { withdrawfromAccount } from '../../utils/transactions/withdrawalService';
+import { sendSlackNotif } from '../../services/slack/slackNotifs';
 
 export const webhookHandler: RequestHandler = async (req, res) => {
   const hash = hashedAuth(req.body);
@@ -9,7 +10,6 @@ export const webhookHandler: RequestHandler = async (req, res) => {
     // get event from request body
     const event = req.body;
     // do something with event
-    // console.log(event);
     try {
       let response;
       if (event.event === 'charge.success') {
@@ -21,9 +21,9 @@ export const webhookHandler: RequestHandler = async (req, res) => {
       if (event.event === 'transfer.failed') {
         response = 'transfer failed, please try again';
       }
-      console.log(response);
+      sendSlackNotif(response);
     } catch (error) {
-      console.log(error);
+      sendSlackNotif(error);
     }
   }
   res.sendStatus(200);

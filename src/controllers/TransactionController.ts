@@ -132,13 +132,9 @@ class TransactionController {
     if (savedTransferDetails) {
       recipientCode = savedTransferDetails.recipient_code;
       accountName = savedTransferDetails.account_name;
-      // console.log('Transfer recipient from db: ', savedTransferDetails);
     } else {
       const resolvedAccountDetails = await resolveAccount(accountNumber, bankCode);
-
       accountName = resolvedAccountDetails.data.account_name;
-
-      // console.log('Resolved account details: ', resolvedAccountDetails.data);
 
       const transferRecipientResult = await createTransferRecipient({
         name: accountName!,
@@ -147,8 +143,6 @@ class TransactionController {
       });
 
       recipientCode = transferRecipientResult.data.recipient_code;
-
-      // console.log('Transfer recipient from paystack: ', transferRecipientResult.data);
     }
 
     await saveTransferDetails({
@@ -167,11 +161,12 @@ class TransactionController {
       reference,
       reason: narration,
     });
+
     await transferInit({ amount, recipient: recipientCode!, reference, reason: narration });
 
     return {
       success: true,
-      message: 'Withdrawal initiated successfully',
+      message: 'Withdrawal successful',
     };
   }
 }

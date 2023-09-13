@@ -2,6 +2,7 @@ import axios from 'axios';
 import { v4 as uuid } from 'uuid';
 import { configDotenv } from 'dotenv';
 import { fundingParams } from '../../types/custom';
+import { sendSlackNotif } from '../slack/slackNotifs';
 
 configDotenv();
 
@@ -17,10 +18,14 @@ const baseUrl = `${process.env.PAYSTACK_BASE_URL}`;
 const paystackClient = axios.create({ baseURL: baseUrl, headers: config.headers });
 
 paystackClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    return response.data;
+  },
+
   (error) => {
-    // TODO: send error notification to slack
+    sendSlackNotif(error.response.data);
     if (error.response.status >= 400 && error.response.status <= 499) {
+      sendSlackNotif(error.response);
       return {
         success: false,
         message: 'Bad request: you probably sent an invalid request',

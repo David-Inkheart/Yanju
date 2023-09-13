@@ -4,6 +4,7 @@ import TransactionController from '../../controllers/TransactionController';
 import paginate from '../../utils/pagination';
 import { deleteTransferRecipient, listBanks, verifyPay } from '../../services/paystack/paystack';
 import { deleteRecipientSchema, verifyPaySchema } from '../../utils/validators';
+import { sendSlackNotif } from '../../services/slack/slackNotifs';
 
 export const transferTransactionHandler: RequestHandler = async (req, res) => {
   try {
@@ -24,7 +25,8 @@ export const transferTransactionHandler: RequestHandler = async (req, res) => {
       success: response.success,
       message: response.message,
     });
-  } catch (err) {
+  } catch (err: any) {
+    await sendSlackNotif(err);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -70,6 +72,7 @@ export const getTransactionsHandler: RequestHandler = async (req, res) => {
       data: paginatedTransactions,
     });
   } catch (err: any) {
+    await sendSlackNotif(err);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -84,15 +87,9 @@ export const fundAccountHandler: RequestHandler = async (req, res) => {
 
     const response = await TransactionController.fundAccountInit(userId, amount);
 
-    // if (!response.success) {
-    //   return res.status(400).json({
-    //     success: response.success
-    //     message: response.message,
-    //   });
-    // }
-
     return res.json(response);
   } catch (err) {
+    await sendSlackNotif(err);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -179,6 +176,7 @@ export const withdrawalHandler: RequestHandler = async (req, res) => {
       message: response.message,
     });
   } catch (err: any) {
+    await sendSlackNotif(err);
     return res.status(500).json({
       success: false,
       message: 'internal server error',
