@@ -3,6 +3,7 @@ import hashedAuth from '../../services/paystack/authHash';
 import fundAccount from '../../utils/transactions/fundAccService';
 import { withdrawfromAccount } from '../../utils/transactions/withdrawalService';
 import { sendSlackNotif } from '../../services/slack/slackNotifs';
+import { reverseTransferDebit } from '../../utils/transactions/transactionReversalService';
 
 export const webhookHandler: RequestHandler = async (req, res) => {
   const hash = hashedAuth(req.body);
@@ -19,7 +20,8 @@ export const webhookHandler: RequestHandler = async (req, res) => {
         response = await withdrawfromAccount(event);
       }
       if (event.event === 'transfer.failed') {
-        response = 'transfer failed, please try again';
+        response = await reverseTransferDebit(event);
+        // response = 'transfer failed, please try again';
       }
       sendSlackNotif(response);
     } catch (error) {

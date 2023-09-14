@@ -41,9 +41,8 @@ export async function withdrawfromAccount(event: any) {
         );
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     sendSlackNotif(error);
-    // TODO: refund user
   }
   return {
     success: true,
