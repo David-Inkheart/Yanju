@@ -10,21 +10,22 @@ const uploadFileHandler: RequestHandler = async (req, res) => {
     });
   }
 
-  const fileBuffer = Buffer.from(file.buffer);
-  const result = client.uploadFile({ fileName: file.originalname, fileContent: fileBuffer }, (err, response) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({
-        success: false,
-        error: 'Something went wrong',
+  let result;
+  try {
+    const fileBuffer = Buffer.from(file.buffer);
+    result = client.uploadFile({ fileName: file.originalname, fileContent: fileBuffer }, (err, response) => {
+      return res.status(200).json({
+        success: true,
+        data: response,
       });
-    }
-    return res.status(200).json({
-      success: true,
-      data: response,
     });
-  });
-
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      error: 'Something went wrong',
+    });
+  }
   return result;
 };
 

@@ -4,6 +4,7 @@ import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 import { ProtoGrpcType } from './proto/upload';
 import { UploadHandlers } from './proto/uploadPackage/Upload';
+import { uploadFile } from './cloudStorage/cloudinary';
 
 const PORT = 50051;
 const PROTO_PATH = path.resolve(__dirname, 'proto/upload.proto');
@@ -13,17 +14,26 @@ const grpcObj = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcTy
 
 const { uploadPackage } = grpcObj;
 
-function handleUploadFile(call: grpc.ServerUnaryCall<any, any>, callback: grpc.sendUnaryData<any>) {
-  const { fileName, fileContent } = call.request;
+async function handleUploadFile(call: grpc.ServerUnaryCall<any, any>, callback: grpc.sendUnaryData<any>) {
+  try {
+    const { fileName, fileContent } = call.request;
+    // save file locally
+    if (!fs.existsSync(path.resolve(__dirname, 'uploads'))) {
+      fs.mkdirSync(path.resolve(__dirname, 'uploads'));
+    }
+    const filePath = path.resolve(__dirname, 'uploads', fileName);
+    fs.writeFileSync(filePath, fileContent);
 
-  if (!fs.existsSync(path.resolve(__dirname, 'uploads'))) {
-    fs.mkdirSync(path.resolve(__dirname, 'uploads'));
+    // send file to cloudinary
+    const fileUrl = await uploadFile(filePath);
+    console.log(fileUrl);
+    const responseMessage = `File ${fileName} uploaded successfully. Size: ${fileContent.length} bytes. Url: ${fileUrl}`;
+    // console.log(responseMessage);
+    callback(null, { message: responseMessage });
+  } catch (error: any) {
+    // console.error(error);
+    callback(error, null);
   }
-  const filePath = path.resolve(__dirname, 'uploads', fileName);
-  fs.writeFileSync(filePath, fileContent);
-  const responseMessage = `File "${fileName}" uploaded successfully. Size: ${fileContent.length} bytes`;
-  // console.log(responseMessage);
-  callback(null, { message: responseMessage });
 }
 
 function createServer() {
