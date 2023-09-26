@@ -1,0 +1,16 @@
+syntax = 'proto3';
+
+package uploadPackage;
+
+service Upload {
+    rpc UploadFile (UploadRequest) returns (UploadResponse) {}
+}
+
+message UploadRequest {
+    string fileName = 1;
+    bytes fileContent = 2;
+}
+
+message UploadResponse {
+    string message = 1;
+}

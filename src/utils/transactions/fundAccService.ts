@@ -41,7 +41,7 @@ async function fundAccount(event: any) {
     });
   } catch (error) {
     await sendSlackNotif(error);
-    // TODO: reverse transaction
+    // TODO: reverse transaction?
   }
   return {
     success: true,

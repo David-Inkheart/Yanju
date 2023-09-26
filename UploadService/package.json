@@ -1,0 +1,24 @@
+{
+  "name": "uploadservice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "proto:gen": "./proto-gen.sh",
+    "start": "ts-node server.ts",
+    "client": "ts-node client.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.9.3",
+    "@grpc/proto-loader": "^0.7.10",
+    "cloudinary": "^1.41.0",
+    "dotenv": "^16.3.1"
+  }
+}

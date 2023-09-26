@@ -1,9 +1,11 @@
 // main router for the app
 import express from 'express';
 
+import multer from 'multer';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
 import { getHomeHandler } from './routeHandlers/home';
+import { webhookHandler } from './routeHandlers/paystackWebhook';
 import {
   deleteRecipientHandler,
   fundAccountHandler,
@@ -13,9 +15,13 @@ import {
   verifyTransHandler,
   withdrawalHandler,
 } from './routeHandlers/transaction';
-import { webhookHandler } from './routeHandlers/paystackWebhook';
+import uploadFileHandler from './routeHandlers/upload';
 
-// instatiate router
+const storage = multer.memoryStorage(); // Store files in memory as buffers
+
+// Create a multer instance with the defined storage
+const upload = multer({ storage });
+
 const router = express.Router();
 
 router.get('/', getHomeHandler);
@@ -36,5 +42,6 @@ router.post('/transfer/:recipientId', transferTransactionHandler);
 router.get('/transactions', getTransactionsHandler);
 router.post('/fund', fundAccountHandler);
 router.post('/withdraw', withdrawalHandler);
+router.post('/upload-file', upload.single('file'), uploadFileHandler);
 
 export default router;

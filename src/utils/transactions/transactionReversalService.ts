@@ -65,7 +65,7 @@ export async function reverseTransferDebit(event: TransferEvent) {
       });
     }
   } catch (error: any) {
-    sendSlackNotif(error);
+    await sendSlackNotif(error);
   }
   return {
     success: true,
