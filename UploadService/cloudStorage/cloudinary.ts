@@ -12,14 +12,16 @@ cloudinary.config({
 export const uploadFile = async (file: any) => {
   try {
     const result = await cloudinary.uploader.upload(file, {
+      folder: 'yanju-uploads',
       public_id: file.originalname,
-      unique_filename: true,
+      unique_filename: false,
       use_filename: true,
       overwrite: true,
+      resource_type: 'auto',
     });
     return result.secure_url;
-  } catch (error) {
-    console.log(error);
-    return null;
+  } catch (error: any) {
+    // console.error(error);
+    throw new Error(error.message);
   }
 };

@@ -14,6 +14,13 @@ const uploadFileHandler: RequestHandler = async (req, res) => {
   try {
     const fileBuffer = Buffer.from(file.buffer);
     result = client.uploadFile({ fileName: file.originalname, fileContent: fileBuffer }, (err, response) => {
+      if (err) {
+        // console.error(err);
+        return res.status(400).json({
+          success: false,
+          message: err.message,
+        });
+      }
       return res.status(200).json({
         success: true,
         data: response,

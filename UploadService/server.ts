@@ -22,16 +22,21 @@ async function handleUploadFile(call: grpc.ServerUnaryCall<any, any>, callback: 
       fs.mkdirSync(path.resolve(__dirname, 'uploads'));
     }
     const filePath = path.resolve(__dirname, 'uploads', fileName);
-    fs.writeFileSync(filePath, fileContent);
+    fs.writeFile(filePath, fileContent, (err: any) => {
+      if (err) {
+        callback(err, null);
+      }
+    });
 
     // send file to cloudinary
     const fileUrl = await uploadFile(filePath);
+    if (!fileUrl) {
+      callback(new Error('Error uploading file'), null);
+    }
     console.log(fileUrl);
     const responseMessage = `File ${fileName} uploaded successfully. Size: ${fileContent.length} bytes. Url: ${fileUrl}`;
-    // console.log(responseMessage);
     callback(null, { message: responseMessage });
   } catch (error: any) {
-    // console.error(error);
     callback(error, null);
   }
 }
