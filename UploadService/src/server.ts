@@ -3,8 +3,8 @@ import fs from 'fs';
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
 import { ProtoGrpcType } from './proto/upload';
-import { UploadHandlers } from './proto/uploadPackage/Upload';
 import { uploadFile } from './cloudStorage/cloudinary';
+import { UploadHandlers } from './proto/uploadPackage/Upload';
 
 const PORT = 50051;
 const PROTO_PATH = path.resolve(__dirname, 'proto/upload.proto');
@@ -27,6 +27,10 @@ async function handleUploadFile(call: grpc.ServerUnaryCall<any, any>, callback: 
         callback(err, null);
       }
     });
+    const localUploadMessage = `File **${fileName}** uploaded locally. Size: ${fileContent.length} bytes`;
+    console.log(localUploadMessage);
+
+    callback(null, { message: localUploadMessage });
 
     // send file to cloudinary
     const fileUrl = await uploadFile(filePath);
@@ -41,10 +45,57 @@ async function handleUploadFile(call: grpc.ServerUnaryCall<any, any>, callback: 
   }
 }
 
+async function handleUploadFileWithStream(call: grpc.ServerReadableStream<any, any>, callback: grpc.sendUnaryData<any>) {
+  let result: any;
+  try {
+    // get the stream from the client
+    const fileName = String(call.metadata.get('fileName'));
+
+    if (!fileName) {
+      result = callback({ code: grpc.status.INVALID_ARGUMENT, message: 'Invalid metadata' }, null);
+    }
+
+    const folderPath = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath);
+    }
+    const filePath = path.join(folderPath, fileName);
+    console.log(filePath);
+
+    // fetch the file from the stream and save it locally
+
+    call.on('data', (chunk) => {
+      fs.appendFileSync(filePath, chunk.fileContent);
+    });
+
+    call.on('end', async () => {
+      const localUploadMessage = `File **${fileName}** uploaded locally.`;
+      console.log(localUploadMessage);
+      result = callback(null, { message: localUploadMessage });
+      // const fileUrl = await uploadFile(filePath);
+      // if (!fileUrl) {
+      //   result = callback(new Error('Error uploading file'), null);
+      // }
+      // console.log(fileUrl);
+      // const responseMessage = `File ${fileName} uploaded successfully. Url: ${fileUrl}`;
+      // result = callback(null, { message: responseMessage });
+    });
+
+    // call.on('error', (err) => {
+    //   result = callback(err, null);
+    // });
+  } catch (error: any) {
+    callback(error, null);
+  }
+
+  return result;
+}
+
 function createServer() {
   const server = new grpc.Server();
   server.addService(uploadPackage.Upload.service, {
     UploadFile: handleUploadFile,
+    UploadFileWithStream: handleUploadFileWithStream,
   } as UploadHandlers);
   return server;
 }

@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "proto:gen": "./proto-gen.sh",
-    "start": "nodemon --exec 'ts-node' server.ts",
+    "compile": "npx tsc",
+    "start": "node dist/server.js",
+    "dev": "nodemon --exec 'ts-node' server.ts",
     "client": "ts-node client.ts"
   },
   "keywords": [],

@@ -8,9 +8,10 @@ const PROTO_PATH = path.resolve(__dirname, 'proto/upload.proto');
 
 const packageDef = protoLoader.loadSync(PROTO_PATH);
 const grpcObj = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
-
 const { uploadPackage } = grpcObj;
 
-const client = new uploadPackage.Upload(`0.0.0.0:${PORT}`, grpc.credentials.createInsecure());
+const client = new uploadPackage.Upload(`0.0.0.0:${PORT}`, grpc.credentials.createInsecure(), {
+  'grpc.max_receive_message_length': 1024 * 1024 * 200, // 100MB
+});
 
 export default client;

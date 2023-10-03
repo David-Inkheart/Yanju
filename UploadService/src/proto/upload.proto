@@ -4,9 +4,15 @@ package uploadPackage;
 
 service Upload {
     rpc UploadFile (UploadRequest) returns (UploadResponse) {}
+    rpc UploadFileWithStream (stream UploadLargeRequest) returns (UploadResponse) {}
 }
 
 message UploadRequest {
+    string fileName = 1;
+    bytes fileContent = 2;
+}
+
+message UploadLargeRequest {
     string fileName = 1;
     bytes fileContent = 2;
 }

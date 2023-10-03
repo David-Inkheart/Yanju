@@ -9,8 +9,8 @@ type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> 
 
 export interface ProtoGrpcType {
   uploadPackage: {
-    UploadService: any;
     Upload: SubtypeConstructor<typeof grpc.Client, _uploadPackage_UploadClient> & { service: _uploadPackage_UploadDefinition };
+    UploadLargeRequest: MessageTypeDefinition;
     UploadRequest: MessageTypeDefinition;
     UploadResponse: MessageTypeDefinition;
   };
