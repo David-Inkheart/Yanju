@@ -11,7 +11,7 @@ const grpcObj = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcTy
 const { uploadPackage } = grpcObj;
 
 const client = new uploadPackage.Upload(`0.0.0.0:${PORT}`, grpc.credentials.createInsecure(), {
-  'grpc.max_receive_message_length': 1024 * 1024 * 200, // 100MB
+  'grpc.max_receive_message_length': 1024 * 1024 * 200, // 200MB
 });
 
 export default client;

@@ -3,10 +3,10 @@
 
 export interface UploadLargeRequest {
   'fileName'?: (string);
-  'fileContent'?: (Buffer | Uint8Array | string);
+  'fileContent'?: (string);
 }
 
 export interface UploadLargeRequest__Output {
   'fileName'?: (string);
-  'fileContent'?: (Buffer);
+  'fileContent'?: (string);
 }
