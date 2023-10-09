@@ -14,7 +14,7 @@ message UploadRequest {
 
 message UploadLargeRequest {
     string fileName = 1;
-    string fileContent = 2;
+    bytes fileContent = 2;
 }
 
 message UploadResponse {

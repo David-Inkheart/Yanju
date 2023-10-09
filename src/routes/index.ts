@@ -1,6 +1,6 @@
 // main router for the app
 import express from 'express';
-import busboy from 'connect-busboy';
+// import busboy from 'connect-busboy';
 
 // import multer from 'multer';
 import authMiddleware from '../middleWares/authMiddleware';
@@ -44,7 +44,7 @@ router.get('/transactions', getTransactionsHandler);
 router.post('/fund', fundAccountHandler);
 router.post('/withdraw', withdrawalHandler);
 
-router.use(busboy({ immediate: true }));
+// router.use(busboy({ immediate: true }));
 router.post('/upload-file', uploadFileHandler);
 
 export default router;

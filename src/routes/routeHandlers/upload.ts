@@ -1,51 +1,104 @@
-import { Metadata } from '@grpc/grpc-js';
 import { RequestHandler } from 'express';
+import formidable from 'formidable';
+// import { Readable, Writable, Duplex, PassThrough, Pipe, Transform } from 'node:stream';
 import fs from 'fs';
+import { Metadata } from '@grpc/grpc-js';
+import path from 'path';
+import { PassThrough, Readable } from 'stream';
 import client from '../../services/grpcUploadClient/client';
 
-const uploadFileHandler: RequestHandler = async (req, res) => {
-  let result;
-  try {
-    if (req.busboy) {
-      // let fileUploaded = false;
-      req.busboy.on('file', (name, file, info) => {
-        const metadata = new Metadata();
-        metadata.set('fileName', info.filename);
-        const call = client.UploadFileWithStream(metadata, (err, response) => {
-          if (err) {
-            result = res.status(500).json({
-              success: false,
-              message: err.message,
-            });
-          } else {
-            result = res.status(200).json({
-              success: true,
-              message: response?.message,
-            });
-          }
-        });
+function streamUploadFile(file: any) {
+  const pass = new PassThrough();
+  const metadata = new Metadata();
+  metadata.set('fileName', file.originalFilename);
 
-        // file.pipe(call);
-        file.on('data', (data) => {
-          call.write({ fileContent: data });
-        });
-
-        file.on('end', () => {
-          call.end();
-        });
-      });
-      req.busboy.on('finish', () => {
-        console.log('file upload finished');
-      });
-      // req.pipe(req.busboy);
+  const call = client.uploadFileWithStream(metadata, (err, res) => {
+    if (err) {
+      return err;
     }
+    return res;
+  });
+
+  pass.on('data', (chunk: string) => {
+    call.write({ fileContent: chunk });
+  });
+
+  pass.on('end', () => {
+    call.end();
+  });
+
+  // create a read stream from the file
+  // const readStream = new Readable(file);
+
+  // pipe the read stream to the pass through stream
+  // readStream.read().pipe(
+  //   pass.on('data', (chunk) => {
+  //     call.write({ fileContent: chunk });
+  //   }),
+  // );
+
+  return pass;
+}
+
+const uploadFileHandler: RequestHandler = (req, res) => {
+  try {
+    // create filepath
+    const folderPath = path.join(__dirname, '../../uploads');
+
+    // if (!fs.existsSync(folderPath)) {
+    //   fs.mkdirSync(folderPath);
+    // }
+
+    // create a new form object
+    const form = formidable({
+      multiples: false,
+      uploadDir: folderPath,
+      keepExtensions: true,
+      allowEmptyFiles: false,
+      fileWriteStreamHandler: streamUploadFile,
+    });
+
+    // parse the form data
+    form.parse(req, (err, fields, files) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({
+          success: false,
+          message: 'Error parsing form data',
+        });
+        return;
+      }
+
+      console.log('files:', files);
+
+      // uploaded files logic goes here
+
+      // For example, move them to a specific folder or perform further actions
+
+      res.status(200).json({
+        success: true,
+        message: 'File uploaded successfully',
+      });
+    });
+
+    form.once('error', (err) => {
+      console.error(err);
+      res.status(500).json({
+        success: false,
+        message: 'Error parsing form data',
+      });
+    });
+
+    form.once('end', () => {
+      console.log('Done!');
+    });
   } catch (error: any) {
-    result = res.status(500).json({
+    console.error(error);
+    res.status(500).json({
       success: false,
-      message: error.message,
+      message: 'Internal server error',
     });
   }
-  return result;
 };
 
 export default uploadFileHandler;

@@ -65,7 +65,7 @@ async function handleUploadFileWithStream(call: grpc.ServerReadableStream<any, a
     // fetch the file from the stream and save it locally
 
     call.on('data', (chunk) => {
-      fs.appendFileSync(filePath, chunk.fileContent);
+      fs.appendFileSync(filePath, chunk.fileContent as string);
     });
 
     call.on('end', async () => {
