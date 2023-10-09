@@ -1,10 +1,8 @@
 import { RequestHandler } from 'express';
 import formidable from 'formidable';
-// import { Readable, Writable, Duplex, PassThrough, Pipe, Transform } from 'node:stream';
-import fs from 'fs';
 import { Metadata } from '@grpc/grpc-js';
 import path from 'path';
-import { PassThrough, Readable } from 'stream';
+import { PassThrough } from 'stream';
 import client from '../../services/grpcUploadClient/client';
 
 function streamUploadFile(file: any) {
@@ -16,26 +14,18 @@ function streamUploadFile(file: any) {
     if (err) {
       return err;
     }
+    console.log('client has started streaming');
     return res;
   });
 
   pass.on('data', (chunk: string) => {
     call.write({ fileContent: chunk });
+    console.log('fileContent: ', chunk);
   });
 
   pass.on('end', () => {
     call.end();
   });
-
-  // create a read stream from the file
-  // const readStream = new Readable(file);
-
-  // pipe the read stream to the pass through stream
-  // readStream.read().pipe(
-  //   pass.on('data', (chunk) => {
-  //     call.write({ fileContent: chunk });
-  //   }),
-  // );
 
   return pass;
 }
@@ -44,10 +34,6 @@ const uploadFileHandler: RequestHandler = (req, res) => {
   try {
     // create filepath
     const folderPath = path.join(__dirname, '../../uploads');
-
-    // if (!fs.existsSync(folderPath)) {
-    //   fs.mkdirSync(folderPath);
-    // }
 
     // create a new form object
     const form = formidable({
@@ -66,14 +52,9 @@ const uploadFileHandler: RequestHandler = (req, res) => {
           success: false,
           message: 'Error parsing form data',
         });
+        console.log('formidable has ended parsing form data');
         return;
       }
-
-      console.log('files:', files);
-
-      // uploaded files logic goes here
-
-      // For example, move them to a specific folder or perform further actions
 
       res.status(200).json({
         success: true,
@@ -90,7 +71,7 @@ const uploadFileHandler: RequestHandler = (req, res) => {
     });
 
     form.once('end', () => {
-      console.log('Done!');
+      console.log('formidable is done with file upload!');
     });
   } catch (error: any) {
     console.error(error);

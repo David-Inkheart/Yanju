@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
+import { randomUUID } from 'crypto';
 import { ProtoGrpcType } from './proto/upload';
 import { uploadFile } from './cloudStorage/cloudinary';
 import { UploadHandlers } from './proto/uploadPackage/Upload';
@@ -49,7 +50,9 @@ async function handleUploadFileWithStream(call: grpc.ServerReadableStream<any, a
   let result: any;
   try {
     // get the stream from the client
-    const fileName = String(call.metadata.get('fileName'));
+    // const fileName = `${String(call.metadata.get('fileName'))}-${randomUUID}`;
+
+    const fileName = call.metadata.get('fileName') as unknown as string;
 
     if (!fileName) {
       result = callback({ code: grpc.status.INVALID_ARGUMENT, message: 'Invalid metadata' }, null);
@@ -60,30 +63,19 @@ async function handleUploadFileWithStream(call: grpc.ServerReadableStream<any, a
       fs.mkdirSync(folderPath);
     }
     const filePath = path.join(folderPath, fileName);
-    console.log(filePath);
 
     // fetch the file from the stream and save it locally
-
     call.on('data', (chunk) => {
       fs.appendFileSync(filePath, chunk.fileContent as string);
+      // console.log('server is getting streams from client');
+      // console.log(chunk);
     });
 
     call.on('end', async () => {
       const localUploadMessage = `File **${fileName}** uploaded locally.`;
       console.log(localUploadMessage);
       result = callback(null, { message: localUploadMessage });
-      // const fileUrl = await uploadFile(filePath);
-      // if (!fileUrl) {
-      //   result = callback(new Error('Error uploading file'), null);
-      // }
-      // console.log(fileUrl);
-      // const responseMessage = `File ${fileName} uploaded successfully. Url: ${fileUrl}`;
-      // result = callback(null, { message: responseMessage });
     });
-
-    // call.on('error', (err) => {
-    //   result = callback(err, null);
-    // });
   } catch (error: any) {
     callback(error, null);
   }
