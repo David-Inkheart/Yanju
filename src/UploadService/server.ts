@@ -1,13 +1,14 @@
-import path from 'path';
-import fs from 'fs';
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import { ProtoGrpcType } from './proto/upload';
+import { randomUUID } from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { ProtoGrpcType } from '../proto/generated/upload';
+import { UploadHandlers } from '../proto/generated/uploadPackage/Upload';
 import { uploadFile } from './cloudStorage/cloudinary';
-import { UploadHandlers } from './proto/uploadPackage/Upload';
 
 const PORT = 50051;
-const PROTO_PATH = path.resolve(__dirname, 'proto/upload.proto');
+const PROTO_PATH = 'upload.proto';
 
 const packageDef = protoLoader.loadSync(PROTO_PATH);
 const grpcObj = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
@@ -49,7 +50,8 @@ async function handleUploadFileWithStream(call: grpc.ServerReadableStream<any, a
   let result: any;
   try {
     // get the stream from the client
-    const fileName = String(call.metadata.get('fileName'));
+
+    const fileName = `${randomUUID()}-${call.metadata.get('fileName')}`;
 
     if (!fileName) {
       result = callback({ code: grpc.status.INVALID_ARGUMENT, message: 'Invalid metadata' }, null);
@@ -60,12 +62,11 @@ async function handleUploadFileWithStream(call: grpc.ServerReadableStream<any, a
       fs.mkdirSync(folderPath);
     }
     const filePath = path.join(folderPath, fileName);
-    console.log(filePath);
 
     // fetch the file from the stream and save it locally
-
     call.on('data', (chunk) => {
       fs.appendFileSync(filePath, chunk.fileContent);
+      console.log('chunk received: ', chunk.fileContent);
     });
 
     call.on('end', async () => {

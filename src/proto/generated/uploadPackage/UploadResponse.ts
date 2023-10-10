@@ -1,4 +1,4 @@
-// Original file: proto/upload.proto
+// Original file: upload.proto
 
 
 export interface UploadResponse {

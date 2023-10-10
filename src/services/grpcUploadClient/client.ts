@@ -1,10 +1,9 @@
-import path from 'path';
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import { ProtoGrpcType } from './proto/upload';
+import { ProtoGrpcType } from '../../proto/generated/upload';
 
 const PORT = 50051;
-const PROTO_PATH = path.resolve(__dirname, 'proto/upload.proto');
+const PROTO_PATH = 'upload.proto';
 
 const packageDef = protoLoader.loadSync(PROTO_PATH);
 const grpcObj = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;

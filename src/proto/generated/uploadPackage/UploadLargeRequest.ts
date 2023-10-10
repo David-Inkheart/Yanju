@@ -1,12 +1,12 @@
-// Original file: proto/upload.proto
+// Original file: upload.proto
 
 
 export interface UploadLargeRequest {
   'fileName'?: (string);
-  'fileContent'?: (string);
+  'fileContent'?: (Buffer | Uint8Array | string);
 }
 
 export interface UploadLargeRequest__Output {
   'fileName'?: (string);
-  'fileContent'?: (string);
+  'fileContent'?: (Buffer);
 }

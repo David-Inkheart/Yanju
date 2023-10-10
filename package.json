@@ -1,17 +1,20 @@
 {
-  "name": "ajuju",
+  "name": "yanju",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node dist/server.js",
+    "startGrpc": "node dist/UploadService/server.js",
     "test": "jest",
     "compile": "npx tsc",
     "build": "npm run prisma:generate && npm run prisma:migrate:deploy && npx tsc",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate:deploy": "npx prisma migrate deploy",
     "postinstall": "npm run build",
-    "dev": "nodemon dist/server.js"
+    "dev": "nodemon dist/server.js",
+    "devGrpc": "nodemon dist/UploadService/server.js",
+    "proto:gen": "rm -rf ./src/proto/generated && npx proto-loader-gen-types --grpcLib=@grpc/grpc-js --outDir=src/proto/generated ./*.proto"
   },
   "keywords": [],
   "author": "",
