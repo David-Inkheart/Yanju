@@ -4,8 +4,9 @@ import { randomUUID } from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { ProtoGrpcType } from '../proto/generated/upload';
-import { UploadHandlers } from '../proto/generated/uploadPackage/Upload';
+import { UploadHandlers } from '../proto/generated/UploadAndDownloadPackage/Upload';
 import { uploadFile } from './cloudStorage/cloudinary';
+import { DownloadHandlers } from '../proto/generated/UploadAndDownloadPackage/Download';
 
 const PORT = 50051;
 const PROTO_PATH = 'upload.proto';
@@ -13,7 +14,7 @@ const PROTO_PATH = 'upload.proto';
 const packageDef = protoLoader.loadSync(PROTO_PATH);
 const grpcObj = grpc.loadPackageDefinition(packageDef) as unknown as ProtoGrpcType;
 
-const { uploadPackage } = grpcObj;
+const { UploadAndDownloadPackage } = grpcObj;
 
 async function handleUploadFile(call: grpc.ServerUnaryCall<any, any>, callback: grpc.sendUnaryData<any>) {
   try {
@@ -92,12 +93,56 @@ async function handleUploadFileWithStream(call: grpc.ServerReadableStream<any, a
   return result;
 }
 
+async function handleDownloadFileWithStream(call: grpc.ServerWritableStream<any, any>) {
+  try {
+    const { fileName } = call.request;
+    if (!fileName) {
+      call.emit('error', {
+        code: grpc.status.INVALID_ARGUMENT,
+        message: 'Invalid fileName',
+      });
+      return;
+    }
+    const filePath = path.resolve(__dirname, 'uploads', fileName);
+
+    if (!fs.existsSync(filePath)) {
+      call.emit('error', {
+        code: grpc.status.NOT_FOUND,
+        message: 'File not found',
+      });
+      return;
+    }
+
+    const readContent = fs.createReadStream(filePath);
+    console.log('started streaming from file to client...');
+
+    readContent.on('data', (chunk) => {
+      call.write({ fileContent: chunk });
+      console.log('chunk sent: ', chunk);
+    });
+
+    readContent.on('end', () => {
+      call.end();
+      console.log('streaming to client finished');
+    });
+  } catch (error: any) {
+    console.log(error);
+    call.emit('error', {
+      code: grpc.status.INTERNAL,
+      message: error.message,
+    });
+  }
+}
+
 function createServer() {
   const server = new grpc.Server();
-  server.addService(uploadPackage.Upload.service, {
+  server.addService(UploadAndDownloadPackage.Upload.service, {
     UploadFile: handleUploadFile,
     UploadFileWithStream: handleUploadFileWithStream,
   } as UploadHandlers);
+  server.addService(UploadAndDownloadPackage.Download.service, {
+    DownloadFileWithStream: handleDownloadFileWithStream,
+  } as DownloadHandlers);
   return server;
 }
 

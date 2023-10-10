@@ -1,7 +1,6 @@
 // main router for the app
 import express from 'express';
 import busboy from 'connect-busboy';
-
 // import multer from 'multer';
 import authMiddleware from '../middleWares/authMiddleware';
 import { changePasswordHandler, confirmResetPasswordHandler, loginHandler, registerHandler, resetPasswordHandler } from './routeHandlers/auth';
@@ -16,11 +15,10 @@ import {
   verifyTransHandler,
   withdrawalHandler,
 } from './routeHandlers/transaction';
-import uploadFileHandler from './routeHandlers/upload';
+import { downloadFileHandler, uploadFileHandler } from './routeHandlers/uploadANDdownload';
 
+// alternate file upload service using multer
 // const storage = multer.memoryStorage(); // Store files in memory as buffers
-
-// // Create a multer instance with the defined storage
 // const upload = multer({ storage });
 
 const router = express.Router();
@@ -44,6 +42,7 @@ router.get('/transactions', getTransactionsHandler);
 router.post('/fund', fundAccountHandler);
 router.post('/withdraw', withdrawalHandler);
 
+router.get('/download-file/:fileName', downloadFileHandler);
 router.use(busboy({ immediate: true }));
 router.post('/upload-file', uploadFileHandler);
 

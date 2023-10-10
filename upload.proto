@@ -1,10 +1,14 @@
 syntax = 'proto3';
 
-package uploadPackage;
+package UploadAndDownloadPackage;
 
 service Upload {
     rpc UploadFile (UploadRequest) returns (UploadResponse) {}
     rpc UploadFileWithStream (stream UploadLargeRequest) returns (UploadResponse) {}
+}
+
+service Download {
+    rpc DownloadFileWithStream (DownloadRequest) returns (stream DownloadResponse) {}
 }
 
 message UploadRequest {
@@ -19,4 +23,12 @@ message UploadLargeRequest {
 
 message UploadResponse {
     string message = 1;
+}
+
+message DownloadRequest {
+    string fileName = 1;
+}
+
+message DownloadResponse {
+    bytes fileContent = 1;
 }

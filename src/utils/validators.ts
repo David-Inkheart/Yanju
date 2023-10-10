@@ -58,7 +58,6 @@ const transactionHistorySchema = joi
     from: joi.date().iso(),
     to: joi.date().iso(),
   })
-  // .xor('limit', 'startDate')
   .with('limit', 'page')
   .with('startDate', 'endDate');
 
@@ -69,6 +68,10 @@ const verifyPaySchema = joi.object({
 const deleteRecipientSchema = joi.object({
   // RCP_2x5j67tnnw1t98k
   recipientCode: joi.string().min(19).max(20).required(),
+});
+
+const downloadSchema = joi.object({
+  fileName: joi.string().min(5).max(100).required(),
 });
 
 export {
@@ -84,4 +87,5 @@ export {
   verifyPaySchema,
   withdrawSchema,
   deleteRecipientSchema,
+  downloadSchema,
 };
